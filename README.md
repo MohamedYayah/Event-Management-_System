@@ -63,7 +63,7 @@ A modern event management platform with face recognition check-in, advanced dash
 
 ## License
 MIT License
-
+This project is licensed under the GPL license. See the LICENSES file for more details. 
 ---
 
 **Demo Ready:**
