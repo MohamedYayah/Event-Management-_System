@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block head %}
+<style>
+  body {
+    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    min-height: 100vh;
+  }
+  .card-modern {
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 24px 0 rgba(34, 60, 80, 0.16);
+    background: #fff;
+    padding: 2rem 2rem 1.5rem 2rem;
+  }
+  .btn-modern {
+    border-radius: 2rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    transition: background 0.2s;
+  }
+  .btn-modern:hover {
+    background: #198754;
+    color: #fff;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100" style="background:linear-gradient(135deg,#232526 0%,#414345 100%);font-family:'Poppins',Arial,sans-serif;">
+  <div class="card card-modern shadow-lg" style="width: 400px; background:rgba(255,255,255,0.13);backdrop-filter:blur(12px);border-radius:2rem;border:1px solid rgba(255,255,255,0.18);box-shadow:0 8px 32px 0 rgba(31,38,135,0.37);">
+    <div class="card-body p-3">
+      <h3 class="card-title text-center mb-4 text-success">Register</h3>
+      <form method="post">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username:</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email:</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password:</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-modern w-100 mb-2" style="background:linear-gradient(90deg,#43e97b 0%,#38f9d7 100%);color:#fff;font-weight:600;box-shadow:0 2px 12px 0 rgba(31,38,135,0.17);"><i class="bi bi-person-plus me-2"></i>Register</button>
+        <div class="d-flex justify-content-between mb-2">
+          <a href="/login" class="btn btn-link p-0">Login</a>
+        </div>
+      </form>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="alert alert-warning mt-3 py-2 px-3 small text-center" id="flash-message">{{ messages[0] }}</div>
+<script>
+setTimeout(function() {
+  var flash = document.getElementById('flash-message');
+  if(flash) flash.style.display = 'none';
+}, 3000);
+</script>
+      {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

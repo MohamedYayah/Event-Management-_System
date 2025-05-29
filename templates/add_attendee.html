@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Attendee</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+    <style>
+        h1, h2, h3, h4, h5, h6 {
+            color: #1976d2;
+            font-weight: 700;
+        }
+        .form-label, label {
+            color: #222;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            color: #222;
+            background: #fff;
+            border: 1.5px solid #b0bec5;
+            border-radius: 0.8rem;
+            font-size: 1rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 0.15rem #1976d233;
+        }
+        .btn, a.btn {
+            color: #222;
+            font-weight: 600;
+            border-radius: 1.5rem;
+        }
+        .btn-success {
+            background: #43a047;
+            border-color: #388e3c;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #388e3c;
+            color: #fff;
+        }
+        .btn-info {
+            background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%);
+            border: none;
+            color: #fff;
+        }
+        .btn-info:hover {
+            background: linear-gradient(90deg, #21cbf3 0%, #2196f3 100%);
+        }
+        .btn-secondary {
+            background: #757575;
+            color: #fff;
+        }
+        .app-card {
+            background: rgba(255,255,255,0.97) !important;
+        }
+        body {
+    background: linear-gradient(135deg, #f5fafd 0%, #dbeafe 100%);
+}
+        .add-attendee-glass-container {
+            background-color: #007bff;
+        }
+        .add-attendee-gradient-bar {
+            background-color: #007bff;
+        }
+    </style>
+</head>
+<body class="bg-primary">
+<div class="app-card">
+    <div class="add-attendee-gradient-bar"></div>
+    <h1 class="mb-4" tabindex="0">Add Attendee</h1>
+    <form id="attendeeForm" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Reference Photo (for face recognition) <span class="text-danger">*</span></label>
+            <div class="mb-2">Please upload a clear photo or use your webcam to capture your face. This will be used for future check-ins.</div>
+            <input type="file" class="form-control mb-2" name="photo" accept="image/*" id="photoInput">
+            <div class="mb-2">Or use your webcam:</div>
+            <button type="button" class="btn btn-info mb-2" id="startWebcam" data-bs-toggle="tooltip" data-bs-placement="top" title="Start Webcam" aria-label="Start Webcam"><i class="bi bi-camera-video"></i> Start Webcam</button>
+            <button type="button" class="btn btn-success mb-2" id="capturePhoto" style="display:none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Capture Photo" aria-label="Capture Photo"><i class="bi bi-camera"></i> Capture Photo</button>
+            <video id="webcam" width="320" height="240" autoplay style="display:none;" aria-label="Webcam Preview"></video>
+            <canvas id="canvas" width="320" height="240" style="display:none;" aria-label="Captured Photo Preview"></canvas>
+            <img id="preview" style="display:none; margin-top:10px; max-width:320px; border:1px solid #ccc;" />
+            <input type="hidden" name="webcam_photo" id="webcam_photo">
+            <div class="alert alert-warning mt-2" id="photoRequiredAlert" style="display:none;">A reference photo is required to add an attendee. Please upload or capture a photo.</div>
+        </div>
+        <script>
+        // Enhanced validation: require either file upload or webcam photo
+        const attendeeForm = document.getElementById('attendeeForm');
+        const photoInput = document.getElementById('photoInput');
+        const webcamPhotoInput = document.getElementById('webcam_photo');
+        const photoRequiredAlert = document.getElementById('photoRequiredAlert');
+        attendeeForm.onsubmit = function(e) {
+            if (!photoInput.value && !webcamPhotoInput.value) {
+                photoRequiredAlert.style.display = '';
+                e.preventDefault();
+                return false;
+            } else {
+                photoRequiredAlert.style.display = 'none';
+            }
+        };
+        // Webcam JS logic (retained from previous implementation)
+        const startBtn = document.getElementById('startWebcam');
+        const captureBtn = document.getElementById('capturePhoto');
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const preview = document.getElementById('preview');
+        let stream = null;
+        startBtn.onclick = async function() {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            captureBtn.style.display = 'inline-block';
+            canvas.style.display = 'none';
+            preview.style.display = 'none';
+        };
+        captureBtn.onclick = function() {
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'block';
+            video.style.display = 'none';
+            captureBtn.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            // Convert canvas to data URL and set hidden input
+            const dataUrl = canvas.toDataURL('image/png');
+            webcamPhotoInput.value = dataUrl;
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+            if (stream) { stream.getTracks().forEach(track => track.stop()); }
+        };
+        photoInput.onchange = function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        };
+        </script>
+        <div class="mb-3">
+            <div id="instructions" class="alert alert-info" tabindex="0" aria-live="polite">
+                <strong>Face Check-In Instructions:</strong><br>
+                1. Click <b>Start Webcam</b> or upload a photo.<br>
+                2. Make sure your face is clearly visible and well-lit.<br>
+                3. Click <b>Capture Photo</b> or <b>Submit</b> to check in.<br>
+            </div>
+            <label class="form-label">Or use your webcam:</label><br>
+            <button type="button" class="btn btn-info mb-2" id="startWebcam" data-bs-toggle="tooltip" data-bs-placement="top" title="Start Webcam" aria-label="Start Webcam"><i class="bi bi-camera-video"></i> Start Webcam</button>
+            <button type="button" class="btn btn-success mb-2" id="capturePhoto" style="display:none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Capture Photo" aria-label="Capture Photo"><i class="bi bi-camera"></i> Capture Photo</button>
+            <video id="webcam" width="320" height="240" autoplay style="display:none;" aria-label="Webcam Preview"></video>
+            <canvas id="canvas" width="320" height="240" style="display:none;" aria-label="Captured Photo Preview"></canvas>
+            <div id="faceError" class="alert alert-danger mt-2" style="display:none;" aria-live="assertive"></div>
+            <div id="faceSuccess" class="alert alert-success mt-2" style="display:none;" aria-live="polite">Face detected and check-in successful!</div>
+            <button type="button" class="btn btn-warning mt-2" id="retryBtn" style="display:none;" aria-label="Retry">Retry</button>
+        </div>
+        <script>
+        // Example JS for face detection feedback (pseudo, must be integrated with backend/ML logic)
+        document.getElementById('retryBtn').onclick = function() {
+            document.getElementById('faceError').style.display = 'none';
+            document.getElementById('faceSuccess').style.display = 'none';
+            document.getElementById('canvas').style.display = 'none';
+            document.getElementById('webcam').style.display = '';
+        };
+        // Show error or success based on backend response (to be triggered after check-in attempt)
+        // Example:
+        // document.getElementById('faceError').innerText = 'No face detected. Please try again.';
+        // document.getElementById('faceError').style.display = '';
+        // document.getElementById('retryBtn').style.display = '';
+        // document.getElementById('faceSuccess').style.display = '';
+        </script>
+        <input type="hidden" name="webcam_photo" id="webcam_photo">
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status">
+                <option>Registered</option>
+                <option>Checked In</option>
+                <option>Absent</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Add Attendee" aria-label="Add Attendee"><i class="bi bi-person-plus"></i> Add Attendee</button>
+        <a href="{{ url_for('view_attendees', event_id=event_id) }}" class="btn btn-secondary ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Cancel" aria-label="Cancel">Cancel</a>
+    </form>
+</div>
+<!-- The rest of your JS for webcam/canvas remains here -->
+<script>
+const startBtn = document.getElementById('startWebcam');
+const captureBtn = document.getElementById('capturePhoto');
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const webcamPhotoInput = document.getElementById('webcam_photo');
+let stream = null;
+
+startBtn.addEventListener('click', async function() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            captureBtn.style.display = 'inline-block';
+        } catch (err) {
+            alert('Could not access webcam.');
+        }
+    }
+});
+
+captureBtn.addEventListener('click', function() {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    webcamPhotoInput.value = dataUrl;
+    // Stop the webcam after capture
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    alert('Photo captured! You can now submit the form.');
+});
+</script>
+<footer class="center-footer">
+    &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+.center-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #444;
+    background: #f9f9f9;
+    z-index: 1000;
+    box-shadow: 0 -1px 4px #0001;
+    margin: 0 auto;
+    text-align: center;
+    gap: 0.75em;
+}
+body { margin-bottom: 40px !important; }
+html, body { width: 100vw; overflow-x: hidden; }
+body { margin-bottom: 40px; }
+</style>
+<footer class="center-footer">
+    &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+.center-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #444;
+    background: #f9f9f9;
+    z-index: 1000;
+    box-shadow: 0 -1px 4px #0001;
+    margin: 0 auto;
+    text-align: center;
+    gap: 0.75em;
+}
+body { margin-bottom: 40px !important; }
+html, body { width: 100vw; overflow-x: hidden; }
+</style>
+</body>
+</html>

@@ -1,0 +1,11 @@
+Flask
+Flask-Login
+Flask-Mail
+pandas
+scikit-learn
+numpy
+mediapipe
+opencv-python
+python-dotenv
+scipy
+Pillow

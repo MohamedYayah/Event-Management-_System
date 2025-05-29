@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Admin Registration{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100" style="background:linear-gradient(135deg,#232526 0%,#414345 100%);font-family:'Poppins',Arial,sans-serif;">
+  <div class="card card-modern shadow-lg" style="width: 400px; background:rgba(255,255,255,0.13);backdrop-filter:blur(12px);border-radius:2rem;border:1px solid rgba(255,255,255,0.18);box-shadow:0 8px 32px 0 rgba(31,38,135,0.37);">
+    <div class="card-body p-3">
+      <h3 class="card-title text-center mb-3 text-danger">Admin Registration</h3>
+      <form method="post">
+        <div class="mb-2">
+          <label for="username" class="form-label mb-1">Username</label>
+          <input type="text" class="form-control form-control-sm" id="username" name="username" required>
+        </div>
+        <div class="mb-2">
+          <label for="email" class="form-label mb-1">Email</label>
+          <input type="email" class="form-control form-control-sm" id="email" name="email" required>
+        </div>
+        <div class="mb-2">
+          <label for="password" class="form-label mb-1">Password</label>
+          <input type="password" class="form-control form-control-sm" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-modern w-100 mb-2" style="background:linear-gradient(90deg,#fc5c7d 0%,#6a82fb 100%);color:#fff;font-weight:600;box-shadow:0 2px 12px 0 rgba(31,38,135,0.17);"><i class="bi bi-person-badge me-2"></i>Register Admin</button>
+      </form>
+      <p class="mt-2 mb-0 small">Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

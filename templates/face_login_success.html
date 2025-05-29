@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 420px;
+            margin: 70px auto 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 36px 28px 28px 28px;
+            text-align: center;
+        }
+        h2 {
+            color: #27ae60;
+            margin-bottom: 18px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            color: #888;
+            font-size: 15px;
+        }
+    .back-btn {
+        display: inline-block;
+        margin-top: 18px;
+        background: linear-gradient(90deg, #3498db 0%, #8e54e9 100%);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-size: 17px;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.08);
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .back-btn:hover {
+        background: linear-gradient(90deg, #217dbb 0%, #5f27e9 100%);
+        color: #fff;
+        text-decoration: none;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if guest_mode %}
+            <h2>Welcome, {{ attendee.name }}!</h2>
+            <p>Your face has been recognized. Enjoy your visit!</p>
+        {% else %}
+            <h2>Welcome, {{ attendee.name }}!</h2>
+            {% if event %}
+                <p>You have successfully checked in for <strong>{{ event.title }}</strong>.</p>
+            {% endif %}
+            <p>We hope you enjoy the event!</p>
+        {% endif %}
+        <a href="/login" class="back-btn">Back to Login</a>
+    </div>
+    
+
+<footer class="center-footer">
+    &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+.center-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #444;
+    background: #f9f9f9;
+    z-index: 1000;
+    box-shadow: 0 -1px 4px #0001;
+    margin: 0 auto;
+    text-align: center;
+    gap: 0.75em;
+}
+body { margin-bottom: 40px !important; }
+html, body { width: 100vw; overflow-x: hidden; }
+body { margin-bottom: 40px; }
+</style>
+</body>
+</html>

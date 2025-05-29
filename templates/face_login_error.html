@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Login Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 420px;
+            margin: 70px auto 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 36px 28px 28px 28px;
+            text-align: center;
+        }
+        h2 {
+            color: #e74c3c;
+            margin-bottom: 18px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            color: #888;
+            font-size: 15px;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+    .back-btn {
+        display: inline-block;
+        margin-top: 18px;
+        background: linear-gradient(90deg, #3498db 0%, #8e54e9 100%);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-size: 17px;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.08);
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .back-btn:hover {
+        background: linear-gradient(90deg, #217dbb 0%, #5f27e9 100%);
+        color: #fff;
+        text-decoration: none;
+    }
+    </style>
+    <script>
+        setTimeout(function() {
+            window.location.href = '/login';
+        }, 30000);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Face Login Error</h2>
+        <div class="error-message">{{ error_message }}</div>
+        <p>You will be redirected to the login page in 30 seconds.</p>
+        <a href="/login" class="back-btn">Back to Login Now</a>
+    </div>
+    <div class="footer">© 2025 Event Manager | v1.0</div>
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100vw;background:#f8f9fa;color:#007bff;font-weight:600;z-index:9999;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+</body>
+</html>

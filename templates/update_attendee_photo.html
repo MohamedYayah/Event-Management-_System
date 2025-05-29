@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Reference Photo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <h1 class="mb-4">Update Reference Photo</h1>
+    <form id="updatePhotoForm" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">Upload new reference photo</label>
+            <input type="file" class="form-control" name="photo" accept="image/*">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Or use your webcam:</label><br>
+            <button type="button" class="btn btn-info mb-2" id="startWebcam" data-bs-toggle="tooltip" title="Start your webcam"><i class="bi bi-camera-video"></i> Start Webcam</button>
+            <button type="button" class="btn btn-success mb-2" id="capturePhoto" style="display:none;" data-bs-toggle="tooltip" title="Capture a photo from webcam"><i class="bi bi-camera"></i> Capture Photo</button>
+            <video id="webcam" width="320" height="240" autoplay style="display:none;"></video>
+            <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+            <img id="preview" style="display:none; margin-top:10px; max-width:320px; border:1px solid #ccc;" />
+        </div>
+        <input type="hidden" name="webcam_photo" id="webcam_photo">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Update Photo</button>
+        <a href="/attendees/{{ attendee.event_id }}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+<script>
+const startBtn = document.getElementById('startWebcam');
+const captureBtn = document.getElementById('capturePhoto');
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const webcamPhotoInput = document.getElementById('webcam_photo');
+const preview = document.getElementById('preview');
+let stream = null;
+startBtn.onclick = async function() {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.style.display = 'block';
+    captureBtn.style.display = 'inline-block';
+    canvas.style.display = 'none';
+    preview.style.display = 'none';
+};
+captureBtn.onclick = function() {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    startBtn.style.display = 'inline-block';
+    const dataUrl = canvas.toDataURL('image/png');
+    webcamPhotoInput.value = dataUrl;
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    if (stream) { stream.getTracks().forEach(track => track.stop()); }
+};
+document.querySelector('input[type="file"][name="photo"]').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.src = ev.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+});
+document.getElementById('updatePhotoForm').onsubmit = function(e) {
+    if (webcamPhotoInput.value) {
+        e.preventDefault();
+        fetch(webcamPhotoInput.value)
+            .then(res => res.blob())
+            .then(blob => {
+                let formData = new FormData(this);
+                formData.set('photo', blob, 'webcam_photo.png');
+                fetch('', { method: 'POST', body: formData })
+                    .then(response => window.location.reload());
+            });
+    }
+};
+</script>
+</body>
+</html>

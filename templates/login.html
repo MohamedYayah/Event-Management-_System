@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block head %}
+<!-- Ensure Bootstrap 5 CSS is loaded -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    min-height: 100vh;
+    font-family: 'Poppins', Arial, sans-serif;
+  }
+  .card-modern {
+    border-radius: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.20);
+    background: rgba(255,255,255,0.96);
+    padding: 1.25rem 1.1rem 1rem 1.1rem;
+    border: 1px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(8px);
+    max-width: 370px;
+    min-width: 320px;
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    color: #1976d2;
+    margin-bottom: 1rem;
+  }
+  .form-label {
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.18rem;
+    font-size: 0.98rem;
+  }
+  .form-control {
+    border-radius: 1.2rem;
+    border: 1.5px solid #e0eafc;
+    padding: 0.65rem 1rem;
+    font-size: 0.98rem;
+    background: rgba(255,255,255,0.78);
+    transition: border 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.06);
+  }
+  .form-control:focus {
+    border: 1.5px solid #8e54e9;
+    box-shadow: 0 0 0 2px #8e54e933;
+    background: #fff;
+  }
+  .custom-btn {
+    width: 100%;
+    background: linear-gradient(90deg, #3498db 0%, #8e54e9 100%);
+    color: #fff;
+    border: none;
+    padding: 9px;
+    border-radius: 1.2rem;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background 0.18s, box-shadow 0.18s, transform 0.13s;
+    box-shadow: 0 2px 12px 0 rgba(31,38,135,0.12);
+    letter-spacing: 0.02em;
+  }
+  .custom-btn:active {
+    transform: scale(0.98);
+  }
+  .custom-btn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  .custom-btn.face {
+    background: linear-gradient(90deg, #27ae60 0%, #00c6ff 100%);
+  }
+  .custom-btn.mini-btn {
+    font-size: 13px;
+    padding: 7px 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.06);
+    font-weight: 500;
+  }
+  .custom-select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 1.2rem;
+    border: 1.5px solid #e0eafc;
+    margin-bottom: 10px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.78);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.08);
+    color: #222;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+  }
+  .custom-select:focus {
+    border: 1.5px solid #8e54e9;
+    box-shadow: 0 0 0 2px #8e54e933;
+    background: #fff;
+  }
+  .custom-label {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    color: #222;
+    letter-spacing: 0.01em;
+  }
+  .btn-modern {
+    border-radius: 2rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    transition: background 0.2s;
+  }
+  .btn-modern:hover, .custom-btn:hover, .custom-btn.face:hover, .custom-btn.mini-btn:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 20px 0 rgba(31,38,135,0.11);
+    text-decoration: none;
+  }
+  .btn-link {
+    color: #3498db;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background 0.13s;
+  }
+  .btn-link:hover {
+    background: #f0f8ff;
+    color: #1976d2;
+    text-decoration: underline;
+  }
+  .alert-warning {
+    border-radius: 1.2rem;
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex flex-column min-vh-100" style="background:linear-gradient(135deg,#232526 0%,#414345 100%);font-family:'Poppins',Arial,sans-serif;">
+  <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+  <div class="card card-modern shadow-lg" style="width: 380px; background:rgba(255,255,255,0.13);backdrop-filter:blur(12px);border-radius:2rem;border:1px solid rgba(255,255,255,0.18);box-shadow:0 8px 32px 0 rgba(31,38,135,0.37);">
+    <div class="card-body p-3">
+      <h3 class="card-title text-center mb-4 text-primary">Login</h3>
+      <style>
+    .custom-btn {
+        width: 100%;
+        background: linear-gradient(90deg, #3498db 0%, #8e54e9 100%);
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 17px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 18px;
+        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.08);
+    }
+    .custom-btn:disabled {
+        background: #aaa;
+        cursor: not-allowed;
+    }
+    .custom-btn.face {
+        background: linear-gradient(90deg, #27ae60 0%, #00c6ff 100%);
+    }
+    .custom-btn.mini-btn {
+        font-size: 14px;
+        padding: 8px 0;
+        margin-bottom: 0;
+        margin-top: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.06);
+        font-weight: 500;
+    }
+    .custom-btn:hover, .custom-btn.face:hover, .custom-btn.mini-btn:hover {
+        filter: brightness(1.08);
+        box-shadow: 0 4px 20px 0 rgba(31,38,135,0.11);
+        text-decoration: none;
+    }
+</style>
+
+{% if attendees and attendees|length > 0 %}
+<form method="post" action="/attendee_login">
+<div class="mb-3">
+  <label for="attendee_name" class="form-label">Select your name:</label>
+  <select class="form-select" id="attendee_name" name="attendee_id">
+    {% for attendee in attendees %}
+    <option value="{{ attendee.id }}">{{ attendee.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+<button type="submit" class="btn btn-primary w-100 mb-2" id="attendeeStandardLoginBtn">Login as Attendee</button>
+
+</form>
+{% endif %}
+      <form method="post" novalidate>
+        {{ form.csrf_token }}
+        <div class="mb-3">
+          {{ form.email.label(class="form-label") }}
+          {{ form.email(class="form-control", placeholder="Enter your email", autofocus=True, required=True, aria_describedby="emailHelp") }}
+          {% for error in form.email.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }}
+          {{ form.password(class="form-control", placeholder="Enter your password", required=True) }}
+          {% for error in form.password.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-modern w-100 mb-2" style="background:linear-gradient(90deg,#1fa2ff 0%,#12d8fa 100%);color:#fff;font-weight:600;box-shadow:0 2px 12px 0 rgba(31,38,135,0.17);"><i class="bi bi-box-arrow-in-right me-2"></i>Login</button>
+        <div class="d-flex justify-content-between mb-2">
+          <a href="/register" class="custom-btn mini-btn" style="width:48%;text-align:center;">Register</a>
+          <a href="/forgot_password" class="custom-btn mini-btn" style="width:48%;text-align:center;background:linear-gradient(90deg,#00c6ff 0%,#0072ff 100%);">Forgot?</a>
+        </div>
+        <a href="{{ url_for('register') }}" class="custom-btn" style="display:block;width:100%;margin-bottom:10px;text-align:center;font-size:15px;background:linear-gradient(90deg,#43cea2 0%,#185a9d 100%);">Don't have an account? Register here</a>
+        {% if not admin_exists %}
+        <p class="mt-1 text-danger small text-center"><strong>No admin?</strong> <a href="{{ url_for('admin_register') }}">Register the first admin here</a>.</p>
+        {% endif %}
+      </form>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="alert alert-warning mt-3 py-2 px-3 small text-center" id="flash-message">{{ messages[0] }}</div>
+<script>
+setTimeout(function() {
+  var flash = document.getElementById('flash-message');
+  if(flash) flash.style.display = 'none';
+}, 3000);
+</script>
+      {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+  </div>
+  <div class="footer text-center py-3" style="width:100%;font-size:14px;color:#888;margin-top:auto;">
+    &copy; 2025 Event Manager | v1.0
+  </div>
+
+<!-- Face Login Modal Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get modal and buttons
+    const faceLoginModal = document.getElementById('faceLoginModal');
+    const webcamBtn = document.getElementById('webcamBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const webcamSection = document.getElementById('webcamSection');
+    const uploadSection = document.getElementById('uploadSection');
+    const webcam = document.getElementById('webcam');
+    const captureBtn = document.getElementById('captureBtn');
+    const canvas = document.getElementById('canvas');
+    const photoInput = document.getElementById('photoInput');
+    const previewImg = document.getElementById('previewImg');
+    const faceImageInput = document.getElementById('faceImageInput');
+    const faceLoginForm = document.getElementById('faceLoginForm');
+    const attendeeSelect = document.getElementById('attendee_name');
+    const modalAttendeeId = document.getElementById('modalAttendeeId');
+    
+    // Initialize modal
+    const modal = new bootstrap.Modal(faceLoginModal);
+    
+    // Webcam functionality
+    if (webcamBtn) {
+        webcamBtn.addEventListener('click', function() {
+            webcamSection.style.display = 'block';
+            uploadSection.style.display = 'none';
+            previewImg.style.display = 'none';
+            
+            // Stop any existing stream
+            if (window.stream) {
+                window.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Get user media
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(function(stream) {
+                    window.stream = stream;
+                    webcam.srcObject = stream;
+                })
+                .catch(function(err) {
+                    console.error('Error accessing webcam:', err);
+                    alert('Could not access the webcam. Please ensure you have granted camera permissions.');
+                });
+        });
+    }
+    
+    // Capture photo from webcam
+    if (captureBtn) {
+        captureBtn.addEventListener('click', function() {
+            const context = canvas.getContext('2d');
+            context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to data URL and set as preview
+            const imageDataUrl = canvas.toDataURL('image/png');
+            previewImg.src = imageDataUrl;
+            previewImg.style.display = 'block';
+            faceImageInput.value = imageDataUrl;
+            
+            // Stop webcam
+            if (window.stream) {
+                window.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            webcamSection.style.display = 'none';
+        });
+    }
+    
+    // Upload photo functionality
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            webcamSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            
+            // Stop any existing webcam stream
+            if (window.stream) {
+                window.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+        
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImg.src = event.target.result;
+                    previewImg.style.display = 'block';
+                    faceImageInput.value = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Update attendee ID in modal when select changes
+    if (attendeeSelect && modalAttendeeId) {
+        attendeeSelect.addEventListener('change', function() {
+            modalAttendeeId.value = this.value;
+        });
+    }
+    
+    // Reset modal state when shown
+    if (faceLoginModal) {
+        faceLoginModal.addEventListener('show.bs.modal', function() {
+            console.log('Face login modal: show.bs.modal event triggered.');
+            try {
+                // Enable buttons
+                if (webcamBtn) webcamBtn.disabled = false;
+                if (uploadBtn) uploadBtn.disabled = false;
+                
+                // Hide sections and clear preview
+                if (webcamSection) webcamSection.style.display = 'none';
+                if (uploadSection) uploadSection.style.display = 'none';
+                
+                if (previewImg) {
+                    previewImg.src = '#'; // Clear previous image
+                    previewImg.style.display = 'none';
+                }
+                if (photoInput) {
+                    photoInput.value = ''; // Clear file input
+                }
+
+                // Synchronize the attendee ID in the modal's hidden form field
+                // with the value from the main page's attendee selection dropdown, if it exists.
+                if (modalAttendeeId) { // Ensure the hidden input field exists in the modal
+                    if (attendeeSelect && typeof attendeeSelect.value !== 'undefined') {
+                        // If the main page's attendee dropdown exists and has a value
+                        modalAttendeeId.value = attendeeSelect.value;
+                        console.log('Face login modal: Set modal attendee ID from dropdown:', attendeeSelect.value);
+                    } else {
+                        // If dropdown doesn't exist or has no value, modalAttendeeId retains its Jinja-rendered initial value.
+                        console.log('Face login modal: Attendee dropdown not found/no value. Modal attendee ID remains:', modalAttendeeId.value);
+                    }
+                }
+            } catch (e) {
+                console.error('Face login modal: Error in show.bs.modal handler:', e);
+                // Optionally, alert the user, though console errors are usually preferred for debugging
+                // alert('An error occurred while preparing the face login dialog. Please check the console.');
+            }
+        });
+        faceLoginModal.addEventListener('hidden.bs.modal', function() {
+            // Stop webcam stream if it exists
+            if (window.stream) {
+                window.stream.getTracks().forEach(track => track.stop());
+                window.stream = null;
+            }
+            // Reset form
+            if (faceLoginForm) {
+                faceLoginForm.reset();
+            }
+            // Hide sections and clear preview
+            if (webcamSection) webcamSection.style.display = 'none';
+            if (uploadSection) uploadSection.style.display = 'none';
+            if (previewImg) {
+                previewImg.src = '#';
+                previewImg.style.display = 'none';
+            }
+            if (photoInput) photoInput.value = '';
+        });
+    }
+    // Ensure attendee ID is set in modal when opening face login from attendee button
+const attendeeFaceLoginBtn = document.getElementById('attendeeFaceLoginBtn');
+if (attendeeFaceLoginBtn && attendeeSelect && modalAttendeeId) {
+    attendeeFaceLoginBtn.addEventListener('click', function() {
+        modalAttendeeId.value = attendeeSelect.value;
+        console.log('Face login modal (attendee): Set modal attendee ID from dropdown:', attendeeSelect.value);
+    });
+}
+console.log('Face Login JS loaded');
+});
+</script>
+</div>
+
+<!-- Face Login Modal (moved outside main flex container for correct stacking) -->
+<div class="modal fade" id="faceLoginModal" tabindex="-1" aria-labelledby="faceLoginModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="faceLoginModalLabel">Face Login</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-center mb-3">
+          <button id="webcamBtn" class="btn btn-primary mx-1">Use Webcam</button>
+          <button id="uploadBtn" class="btn btn-secondary mx-1">Upload Photo</button>
+        </div>
+        <div id="webcamSection" style="display:none;" class="text-center">
+          <video id="webcam" width="260" height="200" autoplay style="border-radius:12px;"></video>
+          <button id="captureBtn" class="btn btn-success mt-2" type="button">Capture</button>
+          <canvas id="canvas" width="260" height="200" style="display:none;"></canvas>
+        </div>
+        <div id="uploadSection" style="display:none;" class="text-center">
+          <input type="file" id="photoInput" accept="image/*" class="form-control mb-2" />
+          <img id="previewImg" src="#" alt="Preview" style="display:none;max-width:220px;border-radius:12px;" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form id="faceLoginForm" method="post" action="/attendee_face_login" enctype="multipart/form-data" style="width:100%;">
+          <input type="hidden" name="attendee_id" value="{{ attendees[0].id if attendees else '' }}" id="modalAttendeeId">
+          <input type="hidden" name="face_image" id="faceImageInput">
+          <button type="submit" class="btn btn-primary w-100">Submit Face Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

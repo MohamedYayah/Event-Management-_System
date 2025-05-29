@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 60px auto 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            color: #888;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Face Login</h2>
+        {% if attendee %}
+            <p>Welcome, {{ attendee.name }}! Please proceed with face login.</p>
+            <div id="webcam-container" style="display:flex; flex-direction:column; align-items:center; margin-top:22px;">
+                <video id="webcam" width="320" height="240" autoplay playsinline style="border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.10);"></video>
+                <button id="shot-btn" style="margin-top:18px; padding:10px 24px; background:#3498db; color:#fff; border:none; border-radius:6px; font-size:16px; cursor:pointer;">Take Shot</button>
+                <canvas id="snapshot" width="320" height="240" style="display:none; margin-top:12px;"></canvas>
+                <img id="preview" src="" alt="Snapshot Preview" style="display:none; margin-top:12px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.10);"/>
+                <form id="submit-form" method="post" action="/submit_face_login">
+                    <input type="hidden" name="image_data" id="image_data" />
+                    <button id="submit-btn" type="submit" style="margin-top:18px; padding:10px 24px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-size:16px; cursor:pointer; display:none;">Submit</button>
+                </form>
+            </div>
+            <script>
+                const video = document.getElementById('webcam');
+                const shotBtn = document.getElementById('shot-btn');
+                const canvas = document.getElementById('snapshot');
+                const preview = document.getElementById('preview');
+                const submitBtn = document.getElementById('submit-btn');
+                const imageDataInput = document.getElementById('image_data');
+                const submitForm = document.getElementById('submit-form');
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(function(stream) {
+                            video.srcObject = stream;
+                            video.play();
+                        })
+                        .catch(function(err) {
+                            video.parentNode.innerHTML = '<p style="color:red;">Unable to access webcam: ' + err.message + '</p>';
+                        });
+                } else {
+                    video.parentNode.innerHTML = '<p style="color:red;">Webcam not supported in this browser.</p>';
+                }
+                shotBtn.onclick = function(e) {
+                    e.preventDefault();
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const dataURL = canvas.toDataURL('image/png');
+                    preview.src = dataURL;
+                    preview.style.display = 'block';
+                    imageDataInput.value = dataURL;
+                    submitBtn.style.display = 'inline-block';
+                };
+            </script>
+        {% else %}
+            <p>No attendee selected. Please go back and select your name.</p>
+        {% endif %}
+    </div>
+    
+
+<footer class="center-footer">
+    &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+.center-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #444;
+    background: #f9f9f9;
+    z-index: 1000;
+    box-shadow: 0 -1px 4px #0001;
+    margin: 0 auto;
+    text-align: center;
+    gap: 0.75em;
+}
+body { margin-bottom: 40px !important; }
+html, body { width: 100vw; overflow-x: hidden; }
+body { margin-bottom: 40px; }
+</style>
+</body>
+</html>

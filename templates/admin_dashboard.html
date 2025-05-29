@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-end align-items-center mb-3">
+    <a href="{{ url_for('admin_profile') }}" class="btn btn-outline-primary btn-sm me-2">
+      <i class="bi bi-person-badge me-1"></i> My Profile
+    </a>
+  </div>
+  <div class="row justify-content-center mb-4">
+    <div class="col-12 col-lg-8 mx-auto">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Attendance Prediction Model</h4>
+        </div>
+        <div class="card-body">
+          <div id="ml-metrics" class="mb-3">
+            <strong>Latest Model Accuracy:</strong> {{ model_accuracy|default('N/A') }}<br>
+            <strong>Precision/Recall:</strong>
+            <hr>
+            <strong>Feature Importances:</strong>
+            {% if feature_importances and feature_importances|length > 0 %}
+            <table class="table table-bordered table-sm mt-2">
+              <thead><tr><th>Feature</th><th>Importance</th></tr></thead>
+              <tbody>
+                {% for feature, importance in feature_importances %}
+                <tr>
+                  <td>{{ feature }}</td>
+                  <td>{{ '%.3f' % importance }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+              <span>No feature importances available.</span>
+            {% endif %}
+
+            {% if model_metrics %}
+            <table class="table table-bordered table-sm mt-2">
+              <thead><tr><th>Label</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead>
+              <tbody>
+                {% for label, metrics in model_metrics.items() if label not in ['accuracy', 'macro avg', 'weighted avg'] %}
+                <tr>
+                  <td>{{ label }}</td>
+                  <td>{{ '%.2f' % metrics['precision'] }}</td>
+                  <td>{{ '%.2f' % metrics['recall'] }}</td>
+                  <td>{{ '%.2f' % metrics['f1-score'] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+              <span>No evaluation metrics available yet.</span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2 mb-2">
+  <form method="post" action="{{ url_for('retrain_model') }}">
+    <button class="btn btn-warning btn-sm" type="submit">Retrain Model</button>
+  </form>
+  <a href="/download_metrics" class="btn btn-outline-secondary btn-sm">Download Metrics (CSV)</a>
+  <form method="post" action="{{ url_for('admin_clear_images') }}" onsubmit="return confirm('Are you sure you want to clear ALL attendee face images from the database? This action cannot be undone.');">
+    <button class="btn btn-danger btn-sm" type="submit">Clear All Images</button>
+  </form>
+</div>
+          <div class="row mt-3">
+            
+            <div class="col-6 text-center">
+              <h6>ROC Curve</h6>
+              {% if roc_img %}
+                <img src="data:image/png;base64,{{ roc_img }}" class="img-fluid rounded border" alt="ROC Curve">
+              {% else %}
+                <span class="text-muted">No image available</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4">
+    <!-- Event Prediction & Tables -->
+    <div class="col-12">
+      
+          <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped align-middle">
+              <thead><tr><th>ID</th><th>Email</th><th>Admin?</th><th>Actions</th></tr></thead>
+              <tbody>
+              {% for user in users %}
+                <tr>
+                  <td>{{ user['id'] }}</td>
+                  <td><a href="{{ url_for('admin_user_profile', user_id=user['id']) }}" title="View Profile">{{ user['email'] }}</a></td>
+                  <td>{% if user['is_admin'] %}<span class="badge bg-success">Yes</span>{% else %}No{% endif %}</td>
+                  <td>
+                    {% if user['id'] != current_user.id %}
+                    <form method="post" action="/admin/user_action" class="d-inline">
+                      <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                      {% if user['is_admin'] %}
+                        <button class="btn btn-sm btn-warning" name="action" value="demote" onclick="return confirm('Demote this admin?')">Demote</button>
+                      {% else %}
+                        <button class="btn btn-sm btn-success" name="action" value="promote" onclick="return confirm('Promote to admin?')">Promote</button>
+                      {% endif %}
+                      <button class="btn btn-sm btn-danger" name="action" value="delete" onclick="return confirm('Delete this user?')">Delete</button>
+                    </form>
+                    {% else %}
+                      <span class="text-muted">(You)</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- Stats Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="app-card card shadow-sm border-0 text-center">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Total Events</h6>
+        <div class="display-6 fw-bold">{{ stats.total_events }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="app-card card shadow-sm border-0 text-center">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Upcoming</h6>
+        <div class="display-6 fw-bold text-primary">{{ stats.upcoming_events }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="app-card card shadow-sm border-0 text-center">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Completed</h6>
+        <div class="display-6 fw-bold text-success">{{ stats.completed_events }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Stats Cards -->
+<h5 class="mb-2 mt-4">All Events</h5>
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Date</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in events %}
+      <tr>
+        <td>{{ event['id'] }}</td>
+        <td>{{ event['title'] }}</td>
+        <td>{{ event['date'] }}</td>
+        <td>{{ event['location'] }}</td>
+        <td>
+          {% if event['status'] == 'Upcoming' %}
+            <span class="badge bg-primary"><i class="bi bi-clock"></i> Upcoming</span>
+          {% elif event['status'] == 'Completed' %}
+            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Completed</span>
+          {% elif event['status'] == 'Cancelled' %}
+            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelled</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ event['status'] }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+  {% if event['status'] == 'Pending Approval' %}
+    <form method="post" action="/admin/event_action" class="d-inline">
+      <input type="hidden" name="event_id" value="{{ event['id'] }}">
+      <button class="btn btn-sm btn-success rounded-pill btn-label-highlight" name="action" value="approve" onclick="return confirm('Approve this event?')">
+        <i class="bi bi-check-circle"></i> Approve
+      </button>
+    </form>
+  {% endif %}
+  <a href="/edit/{{ event['id'] }}" class="btn btn-sm btn-primary rounded-pill btn-label-highlight {% if event['status'] == 'Completed' %}disabled pointer-events-none opacity-50{% endif %}" aria-label="Edit Event" {% if event['status'] == 'Completed' %}tabindex="-1" aria-disabled="true"{% endif %}><i class="bi bi-pencil-square"></i> Edit</a>
+  <form method="post" action="/admin/event_action" class="d-inline">
+    <input type="hidden" name="event_id" value="{{ event['id'] }}">
+    <button class="btn btn-sm btn-warning rounded-pill btn-label-highlight" name="action" value="cancel" onclick="return confirm('Cancel this event?')" {% if event['status'] == 'Completed' %}disabled data-bs-toggle="tooltip" title="Cannot cancel a completed event"{% endif %}><i class="bi bi-x-circle"></i> Cancel</button>
+    <button class="btn btn-sm btn-danger rounded-pill btn-label-highlight" name="action" value="delete" onclick="return confirm('Delete this event?')" {% if event['status'] == 'Completed' %}disabled data-bs-toggle="tooltip" title="Cannot delete a completed event"{% endif %}><i class="bi bi-trash"></i> Delete</button>
+  </form>
+  <a href="/download_predictions/{{ event['id'] }}" class="btn btn-sm btn-outline-info rounded-pill btn-label-highlight"><i class="bi bi-download"></i> Download Predictions</a>
+</div>
+</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+          showToast(`{{ message|escape }}`, 'info', 3500);
+        {% endfor %}
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+</div>
+        <p>Welcome, <strong>{{ current_user.email }}</strong> (Admin)</p>
+        <hr>
+        <h3>All Users</h3>
+        <table class="table table-bordered table-striped">
+            <thead><tr><th>ID</th><th>Email</th><th>Admin?</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user['id'] }}</td>
+
+                    <td><a href="{{ url_for('admin_user_profile', user_id=user['id']) }}" title="View Profile">{{ user['email'] }}</a></td>
+                    <td>{% if user['is_admin'] %}<span class="badge bg-success">Yes</span>{% else %}No{% endif %}</td>
+                    <td>
+                      {% if user['id'] != current_user.id %}
+                        <form method="post" action="/admin/user_action" class="d-inline">
+                          <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                          {% if user['is_admin'] %}
+                            <button class="btn btn-sm btn-warning" name="action" value="demote" onclick="return confirm('Demote this admin?')">Demote</button>
+                          {% else %}
+                            <button class="btn btn-sm btn-success" name="action" value="promote" onclick="return confirm('Promote to admin?')">Promote</button>
+                          {% endif %}
+                          <button class="btn btn-sm btn-danger" name="action" value="delete" onclick="return confirm('Delete this user?')">Delete</button>
+                        </form>
+                      {% else %}
+                        <span class="text-muted">(You)</span>
+                      {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <h3 class="mb-0" style="margin-bottom: 0 !important; padding-bottom: 0 !important; line-height:1.1;">All Events</h3>
+<table class="table table-bordered table-striped" style="margin-top: 0 !important; padding-top: 0 !important;">
+            <thead><tr><th>ID</th><th>Title</th><th>Date</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for event in events %}
+                <tr>
+                    <td>{{ event['id'] }}</td>
+                    <td>{{ event['title'] }}</td>
+                    <td>{{ event['date'] }}</td>
+                    <td>{{ event['location'] }}</td>
+                    <td>
+  {% if event['status'] == 'Upcoming' %}
+    <span class="badge bg-primary"><i class="bi bi-clock"></i> Upcoming</span>
+  {% elif event['status'] == 'Completed' %}
+    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Completed</span>
+  {% elif event['status'] == 'Cancelled' %}
+    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelled</span>
+  {% else %}
+    <span class="badge bg-secondary">{{ event['status'] }}</span>
+  {% endif %}
+</td>
+                    <td>
+                      <form method="post" action="/admin/event_action" class="d-inline">
+                        <input type="hidden" name="event_id" value="{{ event['id'] }}">
+                        <button class="btn btn-sm btn-danger" name="action" value="delete" onclick="return confirm('Delete this event?')">Delete</button>
+                      </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-info" aria-live="polite" id="flash-message">
+          {% for message in messages %}
+            {{ message }}<br>
+          {% endfor %}
+        </div>
+        <script>
+          setTimeout(function() {
+            document.getElementById('flash-message').style.display = 'none';
+          }, 3000);
+        </script>
+      {% endif %}
+    {% endwith %}
+{% include '_chatbot_widget.html' %}
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100vw;background:#f8f9fa;color:#007bff;font-weight:600;z-index:10001;box-shadow:0 -1px 8px #007bff22;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+#chat-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px #0002;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+#chat-widget {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 320px;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0002;
+  display: none;
+  flex-direction: column;
+}
+#chat-header {
+  background: #007bff;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px 8px 0 0;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#chat-log {
+  height: 200px;
+  overflow: auto;
+  padding: 10px;
+  font-size: 14px;
+  background: #f9f9f9;
+}
+#chat-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+</style>
+<button id="chat-fab" title="Chat with AI" onclick="openChatWidget()">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#007bff"/><path d="M7 10C7 8.34315 8.34315 7 10 7H14C15.6569 7 17 8.34315 17 10V14C17 15.6569 15.6569 17 14 17H10C8.34315 17 7 15.6569 7 14V10Z" fill="white"/><circle cx="9.5" cy="12" r="1.5" fill="#007bff"/><circle cx="14.5" cy="12" r="1.5" fill="#007bff"/></svg>
+</button>
+<div id="chat-widget">
+  <div id="chat-header">
+    AI Assistant
+    <button id="chat-close" onclick="closeChatWidget()">&times;</button>
+  </div>
+  <div id="chat-log"></div>
+  <div style="display:flex;border-top:1px solid #eee;">
+    <input type="text" id="chat-input" placeholder="Type your message..." style="flex:1;border:none;padding:8px;font-size:14px;outline:none;">
+    <button onclick="sendMessage()" style="background:#007bff;color:#fff;border:none;padding:8px 16px;cursor:pointer;">Send</button>
+  </div>
+</div>
+<script>
+function openChatWidget() {
+  document.getElementById('chat-widget').style.display = 'flex';
+  document.getElementById('chat-fab').style.display = 'none';
+  setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+}
+function closeChatWidget() {
+  document.getElementById('chat-widget').style.display = 'none';
+  document.getElementById('chat-fab').style.display = 'flex';
+}
+function appendMessage(sender, text) {
+    const log = document.getElementById('chat-log');
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+    log.scrollTop = log.scrollHeight;
+}
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    appendMessage('You', message);
+    input.value = '';
+    fetch('/chatbot', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: message})
+    })
+    .then(response => response.json())
+    .then(data => appendMessage('Bot', data.response))
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+}
+document.getElementById('chat-input').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') sendMessage();
+});
+</script>
+
+  <div id="chat-log" style="height:200px;overflow:auto;padding:10px;font-size:14px;"></div>
+  <div style="display:flex;border-top:1px solid #eee;">
+    <input type="text" id="chat-input" placeholder="Type your message..." style="flex:1;border:none;padding:8px;font-size:14px;outline:none;">
+    <button onclick="sendMessage()" style="background:#007bff;color:#fff;border:none;padding:8px 16px;cursor:pointer;">Send</button>
+  </div>
+</div>
+<script>
+function appendMessage(sender, text) {
+    const log = document.getElementById('chat-log');
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+    log.scrollTop = log.scrollHeight;
+}
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    appendMessage('You', message);
+    input.value = '';
+    fetch('/chatbot', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: message})
+    })
+    .then(response => response.json())
+    .then(data => appendMessage('Bot', data.response))
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+}
+document.getElementById('chat-input').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') sendMessage();
+});
+</script>
+{% endblock %}

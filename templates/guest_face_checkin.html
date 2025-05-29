@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Face Check-In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 60px auto 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            color: #888;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Guest Face Check-In</h2>
+        <form id="guest-face-form" method="post" action="/guest_face_checkin">
+            <div id="webcam-container" style="display:flex; flex-direction:column; align-items:center; margin-top:22px;">
+                <video id="webcam" width="320" height="240" autoplay playsinline style="border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.10);"></video>
+                <button type="button" id="shot-btn" style="margin-top:18px; padding:10px 24px; background:#3498db; color:#fff; border:none; border-radius:6px; font-size:16px; cursor:pointer;">Take Shot</button>
+                <canvas id="snapshot" width="320" height="240" style="display:none; margin-top:12px;"></canvas>
+                <img id="preview" src="" alt="Snapshot Preview" style="display:none; margin-top:12px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.10);"/>
+                <input type="hidden" name="image_data" id="image_data" />
+                <button id="submit-btn" type="submit" style="margin-top:18px; padding:10px 24px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-size:16px; cursor:pointer; display:none;">Submit</button>
+            </div>
+        </form>
+        <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('snapshot');
+        const preview = document.getElementById('preview');
+        const shotBtn = document.getElementById('shot-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const imageDataInput = document.getElementById('image_data');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { alert('Could not access webcam.'); });
+
+        shotBtn.onclick = function(e) {
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+            imageDataInput.value = dataUrl;
+            submitBtn.style.display = 'inline-block';
+        };
+        </script>
+        <div class="footer">&copy; 2025 Event Manager | v1.0</div>
+    </div>
+</body>
+</html>

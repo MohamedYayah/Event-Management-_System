@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendees for {{ event.title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5fafd 0%, #dbeafe 100%);
+        }
+        .app-card {
+            background: rgba(255,255,255,0.97) !important;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.12);
+            border-radius: 2rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .table th, .table td {
+            color: #222;
+            vertical-align: middle;
+            font-size: 1rem;
+        }
+        .table th {
+            background: #e3f0ff;
+            font-weight: 700;
+        }
+        .btn-modern {
+            border-radius: 1.5rem;
+            font-weight: 600;
+        }
+        .card {
+            background: #fff;
+            border-radius: 1.5rem;
+            box-shadow: 0 2px 12px 0 rgba(31,38,135,0.09);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background: #f5fafd;
+            color: #1976d2;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 1.5rem 1.5rem 0 0;
+        }
+    </style>
+</head>
+<body>
+{% include 'navbar.html' %}
+<div class="app-card">
+    <h1 class="mb-4">Attendees for {{ event.title }}</h1>
+    <div class="row mb-4">
+        <div class="col-12 col-md-auto mb-2 mb-md-0 d-flex gap-3">
+            <a href="{{ url_for('add_attendee', event_id=event.id) }}" class="btn btn-primary btn-modern" aria-label="Add Attendee">Add Attendee</a>
+            <a href="/" class="btn btn-secondary btn-modern" aria-label="Back to Dashboard">Back to Dashboard</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Attendee List</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                        <th scope="col">Photo</th>
+{% if show_faces %}<th scope="col">Face Image</th>{% endif %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for attendee in attendees %}
+                    <tr>
+                        <td>{{ attendee['name'] }}</td>
+                        <td>{{ attendee['email'] }}</td>
+                        <td>{{ attendee['status'] }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_attendee', attendee_id=attendee['id']) }}" class="btn btn-sm btn-primary btn-modern me-1" aria-label="Edit Attendee">Edit</a>
+                            <form action="{{ url_for('delete_attendee', event_id=event.id, attendee_id=attendee['id']) }}" method="post" style="display:inline;">
+    <button class="btn btn-sm btn-danger btn-modern" type="submit" aria-label="Delete Attendee" onclick="return confirm('Delete this attendee?')">Delete Attendee</button>
+</form>
+                        </td>
+                        {% if show_faces %}
+                        <td>
+                            {% if attendee['face_landmarks'] %}
+                                <img src="/static/attendee_faces/{{ attendee['id'] }}.jpg" alt="Face" width="64" height="64" style="object-fit:cover;border-radius:50%;border:1px solid #ccc;" onerror="this.style.display='none';">
+                            {% else %}
+                                <span class="text-muted">No face</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <a href="{{ url_for('update_attendee_photo', attendee_id=attendee['id']) }}" class="btn btn-sm btn-secondary btn-modern" aria-label="Update Attendee Photo" data-bs-toggle="tooltip" title="Update reference photo"><i class="bi bi-camera"></i> Update Photo</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="center-footer">
+    &copy; 2025 Event Manager | v1.0
+</footer>
+<style>
+.center-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #444;
+    background: #f9f9f9;
+    z-index: 1000;
+    box-shadow: 0 -1px 4px #0001;
+    margin: 0 auto;
+    text-align: center;
+    gap: 0.75em;
+}
+body { margin-bottom: 40px !important; }
+html, body { width: 100vw; overflow-x: hidden; }
+body { margin-bottom: 40px; }
+</style>
+</body>
+</html>

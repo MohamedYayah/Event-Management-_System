@@ -1,0 +1,30 @@
+<nav class="navbar navbar-expand-lg mb-4" style="background:rgba(255,255,255,0.10);backdrop-filter:blur(8px);box-shadow:0 4px 24px 0 rgba(34,60,80,0.16);border-radius:1.5rem; font-family:'Poppins',Arial,sans-serif;">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/" style="letter-spacing:0.08em;font-size:1.5rem;"><i class="bi bi-calendar2-event me-2"></i>Event Manager</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/notifications"><i class="bi bi-bell me-1"></i>Notifications</a></li>
+          <li class="nav-item"><a class="nav-link" href="/calendar">Calendar</a></li>
+          {% if current_user.email %}
+            <li class="nav-item"><a class="nav-link text-danger" href="/admin">Admin Dashboard</a></li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-1" href="/profile" title="Profile Settings">
+              <i class="bi bi-gear"></i> Settings
+            </a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+          {# Calendar link hidden when not authenticated #}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Event</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .edit-event-glass-container {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px 0 rgba(34, 60, 80, 0.12);
+    padding: 2rem 2rem 1.5rem 2rem;
+    margin-bottom: 2rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.form-label,
+h1, h2, h3, h4, h5, h6,
+label {
+    color: #0d6efd;
+    font-weight: 500;
+}
+input::placeholder, textarea::placeholder {
+    color: #0d6efd;
+    opacity: 0.8;
+}
+        .edit-event-gradient-bar {
+    background: linear-gradient(135deg, #6c63ff, #00cfff, #e040fb);
+    height: 5px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+        .form-control, .form-select {
+    background-color: #fff;
+    border: 1px solid #dbeafe;
+    color: #222;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px 0 rgba(34, 60, 80, 0.06);
+}
+        .form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.15);
+}
+        .btn {
+    padding: 10px 20px;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn:hover, .btn:focus {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 4px 16px 0 rgba(34, 60, 80, 0.10);
+}
+        .btn-warning, .btn-secondary, .btn-info, .btn-success {
+    background: linear-gradient(135deg,#6c63ff,#00cfff,#e040fb);
+    border: none;
+    color: #fff;
+    font-weight: 500;
+}
+        .alert-success {
+    background-color: #f5fafd;
+    border-color: #dbeafe;
+    color: #0d6efd;
+    font-weight: 500;
+}
+    </style>
+</head>
+<body style="background: linear-gradient(135deg, #f5fafd 0%, #dbeafe 100%);">
+{% include 'navbar.html' %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="app-card col-12 col-md-6 mx-auto p-4" style="max-width: 480px;">
+    <div class="edit-event-gradient-bar"></div>
+    <h1 class="mb-4 text-primary text-center">Edit Event</h1>
+{% if creator_email %}
+  <div class="alert alert-info text-center mb-3" style="font-size:1.08rem;">
+    <strong>Event created by:</strong> {{ creator_email }}
+  </div>
+{% endif %}
+    {% set editing_blocked = (event.status == 'Completed') or (event.status == 'In Progress' and event.date ~ ' ' ~ event.time <= now.strftime('%Y-%m-%d %H:%M')) %}
+    {% if editing_blocked %}
+    <div class="alert alert-warning text-center">Editing is not allowed for this event (status: {{ event.status }}).</div>
+    {% endif %}
+    <form method="post" {% if editing_blocked %}onsubmit="return false;"{% endif %}>
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control form-control-sm" name="title" value="{{ event['title'] }}" required {% if editing_blocked %}disabled{% endif %}>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control form-control-sm" name="date" value="{{ event['date'] }}" required {% if editing_blocked %}disabled{% endif %} min="{{ now.strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Time</label>
+            <input type="time" class="form-control form-control-sm" name="time" value="{{ event['time'] }}" required {% if editing_blocked %}disabled{% endif %}>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control form-control-sm" name="location" value="{{ event['location'] }}" required {% if editing_blocked %}disabled{% endif %}>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select form-select-sm" name="status" required {% if editing_blocked %}disabled{% endif %}>
+                <option {% if event['status']=='Upcoming' %}selected{% endif %}>Upcoming</option>
+                <option {% if event['status']=='In Progress' %}selected{% endif %}>In Progress</option>
+                <option {% if event['status']=='Completed' %}selected{% endif %}>Completed</option>
+                <option {% if event['status']=='Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control form-control-sm" name="description" rows="3" {% if editing_blocked %}disabled{% endif %}>{{ event.description }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Attendance</label>
+            <input type="number" class="form-control form-control-sm" name="attendance" min="0" value="{{ event.attendance }}" required {% if editing_blocked %}disabled{% endif %}>
+        </div>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+  <button type="submit" class="btn btn-warning" {% if editing_blocked %}disabled{% endif %}>Save Changes</button>
+  <a href="/" class="btn btn-secondary" {% if event.status == 'Completed' %}disabled data-bs-toggle="tooltip" title="Cannot cancel a completed event"{% endif %}>Cancel</a>
+  <a href="/predict_attendance/{{ event.id }}" class="btn btn-info" data-bs-toggle="tooltip" title="Predict attendance using AI"><i class="bi bi-graph-up"></i> Predict Attendance</a>
+  <a href="/face_checkin/{{ event.id }}" class="btn btn-success" data-bs-toggle="tooltip" title="Face check-in for event"><i class="bi bi-person-bounding-box"></i> Face Check-In</a>
+</div>
+{% if current_user.is_authenticated and current_user.is_admin and event.status == 'Pending Approval' %}
+  <div class="alert alert-info text-center mt-4 mb-2">
+    <strong>This event is pending approval.</strong>
+    <form method="post" style="display:inline;">
+      <button type="submit" name="approve_event" value="1" class="btn btn-success ms-2">Approve Event</button>
+    </form>
+  </div>
+{% endif %}
+    </form>
+    {% if prediction is not none %}
+    <div class="alert alert-success mt-3">
+        <strong>Predicted Attendance:</strong> {{ prediction }}
+    </div>
+    {% endif %}
+<h2 class="mt-4 text-primary text-center">Attendees</h2>
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for attendee in attendees %}
+    <tr>
+      <td>{{ attendee.name }}</td>
+      <td>{{ attendee.email }}</td>
+      <td>{{ attendee.role }}</td>
+      <td>{{ attendee.status }}</td>
+      <td>
+        <!-- Edit Button triggers a collapsible edit form -->
+        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
+                data-bs-target="#editAttendee{{ attendee.id }}" aria-expanded="false"
+                aria-controls="editAttendee{{ attendee.id }}">
+          Edit
+        </button>
+        <form action="{{ url_for('delete_attendee', event_id=event.id, attendee_id=attendee.id) }}" method="post" style="display:inline;">
+  <button type="submit" class="btn btn-danger ms-2" onclick="return confirm('Delete this attendee?');">Delete Attendee</button>
+</form>
+        <div class="collapse mt-2" id="editAttendee{{ attendee.id }}">
+          <form action="{{ url_for('edit_attendee', event_id=event.id, attendee_id=attendee.id) }}"
+                method="post" class="row g-2 align-items-end">
+            <div class="col">
+              <input type="text" name="edit_name" class="form-control" value="{{ attendee.name }}" required>
+            </div>
+            <div class="col">
+              <input type="email" name="edit_email" class="form-control" value="{{ attendee.email }}" required>
+            </div>
+            <div class="col">
+              <input type="text" name="edit_role" class="form-control" value="{{ attendee.role }}" required>
+            </div>
+            <div class="col">
+              <button type="submit" class="btn btn-success btn-sm">Save</button>
+            </div>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<!-- Add Attendee Button triggers modal -->
+<button type="button" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#addAttendeeModal">
+  Add Attendee
+</button>
+<!-- Add Attendee Modal -->
+<div class="modal fade" id="addAttendeeModal" tabindex="-1" aria-labelledby="addAttendeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAttendeeModalLabel">Add Attendee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="attendeeForm" action="{{ url_for('add_attendee', event_id=event.id) }}" method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reference Photo (for face recognition) <span class="text-danger">*</span></label>
+            <div class="mb-2">Please upload a clear photo or use your webcam to capture your face. This will be used for future check-ins.</div>
+            <input type="file" class="form-control mb-2" name="photo" accept="image/*" id="photoInput">
+            <div class="mb-2">Or use your webcam:</div>
+            <button type="button" class="btn btn-info mb-2" id="startWebcam" data-bs-toggle="tooltip" data-bs-placement="top" title="Start Webcam" aria-label="Start Webcam"><i class="bi bi-camera-video"></i> Start Webcam</button>
+            <button type="button" class="btn btn-success mb-2" id="capturePhoto" style="display:none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Capture Photo" aria-label="Capture Photo"><i class="bi bi-camera"></i> Capture Photo</button>
+            <video id="webcam" width="320" height="240" autoplay style="display:none;" aria-label="Webcam Preview"></video>
+            <canvas id="canvas" width="320" height="240" style="display:none;" aria-label="Captured Photo Preview"></canvas>
+            <img id="preview" style="display:none; margin-top:10px; max-width:320px; border:1px solid #ccc;" />
+            <input type="hidden" name="webcam_photo" id="webcam_photo">
+            <div class="alert alert-warning mt-2" id="photoRequiredAlert" style="display:none;">A reference photo is required to add an attendee. Please upload or capture a photo.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <input type="text" class="form-control" name="role" value="attendee" required>
+          </div>
+          <button type="submit" class="btn btn-success">Add Attendee</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Enhanced validation: require either file upload or webcam photo
+const attendeeForm = document.getElementById('attendeeForm');
+const photoInput = document.getElementById('photoInput');
+const webcamPhotoInput = document.getElementById('webcam_photo');
+const photoRequiredAlert = document.getElementById('photoRequiredAlert');
+attendeeForm.onsubmit = function(e) {
+  if (!photoInput.value && !webcamPhotoInput.value) {
+    photoRequiredAlert.style.display = '';
+    e.preventDefault();
+    return false;
+  }
+};
+// Webcam JS logic
+const startBtn = document.getElementById('startWebcam');
+const captureBtn = document.getElementById('capturePhoto');
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const preview = document.getElementById('preview');
+let stream = null;
+if (startBtn) {
+  startBtn.addEventListener('click', async function() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        captureBtn.style.display = 'inline-block';
+      } catch (err) {
+        alert('Could not access webcam.');
+      }
+    }
+  });
+}
+if (captureBtn) {
+  captureBtn.addEventListener('click', function() {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    webcamPhotoInput.value = dataUrl;
+    // Stop the webcam after capture
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    alert('Photo captured! You can now submit the form.');
+  });
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100%;background:#f8f9fa;color:#007bff;font-weight:600;z-index:9999;">
+  © 2025 Event Manager | v1.0
+</footer>
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100vw;background:#f8f9fa;color:#007bff;font-weight:600;z-index:9999;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+</body>
+</html>

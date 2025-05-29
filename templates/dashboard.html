@@ -1,0 +1,3521 @@
+{% extends 'base.html' %}
+
+  
+
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(135deg, #f5fafd 0%, #dbeafe 100%);
+    min-height: 100vh;
+    font-family: 'Poppins', Arial, sans-serif;
+  }
+  .dashboard-title {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #0d6efd;
+    margin-bottom: 1.5rem;
+  }
+  .card-stats {
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px 0 rgba(34, 60, 80, 0.12);
+    background: #fff;
+    margin-bottom: 1.5rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .card-stats:hover {
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 8px 32px 0 rgba(34, 60, 80, 0.18);
+  }
+  .icon-circle {
+    width: 3.2rem; height: 3.2rem; border-radius: 50%; background: linear-gradient(135deg,#6c63ff,#00cfff,#e040fb); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 0.5rem auto; box-shadow: 0 2px 12px 0 #6c63ff33;
+  }
+  .table {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 2rem;
+  }
+  .table thead {
+    background-color: #f5f5f5;
+  }
+  .table tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+  .table tbody tr:focus {
+    background-color: #f5f5f5;
+  }
+</style>
+<div class="container-fluid py-4">
+  <div class="dashboard-title h2 mb-2">Event Management Dashboard</div>
+
+<div class="row mb-4">
+  <div class="col-lg-6 col-md-8 mx-auto">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          {% if profile and profile.profile_picture %}
+            <img src="{{ url_for('static', filename='profile_pics/' ~ profile.profile_picture) }}" alt="Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+          {% else %}
+            <img src="{{ url_for('static', filename='profile_pics/default.png') }}" alt="Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+          {% endif %}
+        </div>
+        <div>
+          <h5 class="mb-1">{{ profile.name if profile else user.username }}</h5>
+          <div class="text-muted small mb-1">{{ user.email }}</div>
+          <div class="small">
+            <span class="me-2"><i class="bi bi-telephone"></i> {{ profile.phone if profile else 'N/A' }}</span>
+            <span class="me-2"><i class="bi bi-geo-alt"></i> {{ profile.city if profile else 'N/A' }}</span>
+            <span class="me-2"><i class="bi bi-gender-ambiguous"></i> {{ profile.gender if profile else 'N/A' }}</span>
+          </div>
+          <div class="small"><i class="bi bi-house"></i> {{ profile.address if profile else 'N/A' }}</div>
+          <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-sm mt-2">Edit Profile</a>
+          {% if not profile %}
+            <div class="alert alert-warning mt-2 p-2 small mb-0">Complete your profile for a better experience!</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <h5 class="mb-2 mt-3 text-primary">Search Events</h5>
+  <form class="dashboard-search-bar d-flex flex-nowrap align-items-end gap-2 mb-4" method="get" action="/dashboard" style="overflow-x:auto;">
+    <input class="form-control flex-grow-1" type="search" name="q" placeholder="Search events by title..." value="{{ request.args.get('q', '') }}" aria-label="Search">
+    <input class="form-control" type="date" name="date" value="{{ request.args.get('date', '') }}" aria-label="Date">
+    <input class="form-control" type="text" name="location" placeholder="Location" value="{{ request.args.get('location', '') }}" aria-label="Location">
+    <select class="form-select" name="status" aria-label="Status">
+      <option value="">Any Status</option>
+      <option value="Upcoming" {% if request.args.get('status') == 'Upcoming' %}selected{% endif %}>Upcoming</option>
+      <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+      <option value="Completed" {% if request.args.get('status') == 'Completed' %}selected{% endif %}>Completed</option>
+      <option value="Cancelled" {% if request.args.get('status') == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+    </select>
+    <button class="btn btn-outline-primary btn-label-highlight" type="submit"><i class="bi bi-search"></i> Search</button>
+    <a href="/" class="btn btn-outline-secondary btn-label-highlight">Clear</a>
+  </form>
+  {% if notifications and notifications|length > 0 %}
+  {% for note in notifications %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <i class="bi bi-info-circle me-2"></i>{{ note['message'] }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+{% if notifications and notifications|length > 0 %}
+  {% for note in notifications %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <i class="bi bi-info-circle me-2"></i>{{ note['message'] }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+<div class="mb-4 p-3 bg-white rounded shadow-sm border border-2 border-light">
+    <span class="fw-semibold">Welcome!</span> Manage your events, view statistics, and use the AI assistant for help. All actions are secure and require confirmation.
+  </div>
+  <div class="row g-4 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card card-stats text-center">
+        <div class="card-body">
+          <div class="icon-circle mb-2"><i class="bi bi-calendar-event"></i></div>
+          <h5 class="card-title">Total Events</h5>
+          <div class="display-6">{{ stats.total }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-stats text-center">
+        <div class="card-body">
+          <div class="icon-circle mb-2"><i class="bi bi-calendar-check"></i></div>
+          <h5 class="card-title">Upcoming</h5>
+          <div class="display-6">{{ stats.upcoming }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-stats text-center">
+        <div class="card-body">
+          <div class="icon-circle mb-2"><i class="bi bi-calendar-day"></i></div>
+          <h5 class="card-title">Today</h5>
+          <div class="display-6">{{ stats.today }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-stats text-center">
+        <div class="card-body">
+          <div class="icon-circle mb-2"><i class="bi bi-calendar-x"></i></div>
+          <h5 class="card-title">Cancelled</h5>
+          <div class="display-6">{{ stats.cancelled }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="h5 mb-0">All Events</span>
+      <a href="/add" class="btn btn-success">+ Add Event</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if events and events|length > 0 %}
+            {% for event in events %}
+            <tr>
+              <td>{{ event.id }}</td>
+              <td>{{ event.title }}
+                {% if event.created_by == current_user.id %}
+                  <span class="badge bg-success ms-2">My Event</span>
+                {% endif %}
+              </td>
+              <td>{{ event.date }}</td>
+              <td>{{ event.location }}</td>
+              <td>
+                {% if event.status == 'Upcoming' %}
+                  <span class="badge bg-info text-dark">Upcoming</span>
+                {% elif event.status == 'Today' %}
+                  <span class="badge bg-success">Today</span>
+                {% elif event.status == 'Cancelled' %}
+                  <span class="badge bg-danger">Cancelled</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ event.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex flex-row gap-2">
+                  <a href="/edit/{{ event.id }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 {% if event.status == 'Completed' %}disabled pointer-events-none opacity-50{% endif %}" title="Edit Event" data-bs-toggle="tooltip" {% if event.status == 'Completed' %}tabindex="-1" aria-disabled="true"{% endif %}>
+<i class="bi bi-pencil-square"></i> Edit</a>
+                  <form method="post" action="/cancel/{{ event.id }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" title="Cancel Event" data-bs-toggle="tooltip" {% if event.status == 'Cancelled' %}disabled{% endif %} onclick="return confirm('Cancel this event?');">
+<i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                  </form>
+                  <form method="post" action="/delete/{{ event.id }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" title="Delete Event" data-bs-toggle="tooltip" onclick="return confirm('Delete this event?');">
+<i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center text-muted">No events found.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include '_chatbot_widget.html' %}
+{% endblock %}
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100vw;background:#f8f9fa;color:#007bff;font-weight:600;z-index:10001;box-shadow:0 -1px 8px #007bff22;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'flex';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'none';
+
+  
+
+  setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+
+  
+
+}
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'none';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'flex';
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const log = document.getElementById('chat-log');
+
+  
+
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+
+  
+
+    log.scrollTop = log.scrollHeight;
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const input = document.getElementById('chat-input');
+
+  
+
+    const message = input.value.trim();
+
+  
+
+    if (!message) return;
+
+  
+
+    appendMessage('You', message);
+
+  
+
+    input.value = '';
+
+  
+
+    fetch('/chatbot', {
+
+  
+
+        method: 'POST',
+
+  
+
+        headers: {'Content-Type': 'application/json'},
+
+  
+
+        body: JSON.stringify({message: message})
+
+  
+
+    })
+
+  
+
+    .then(response => response.json())
+
+  
+
+    .then(data => appendMessage('Bot', data.response))
+
+  
+
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+
+  
+
+}
+
+  
+
+
+
+  
+
+    if (e.key === 'Enter') sendMessage();
+
+  
+
+});
+
+  
+
+</script>
+
+
+
+  
+
+  body {
+
+  
+
+    background: linear-gradient(135deg, #f5fafd 0%, #dbeafe 100%);
+
+  
+
+    min-height: 100vh;
+
+  
+
+  }
+
+  
+
+  .card-stats {
+
+  
+
+    border-radius: 1rem;
+
+  
+
+    box-shadow: 0 4px 24px 0 rgba(34, 60, 80, 0.12);
+
+  
+
+    background: #fff;
+
+  
+
+  }
+
+  
+
+  .dashboard-title {
+
+  
+
+    font-weight: 700;
+
+  
+
+    letter-spacing: 0.03em;
+
+  
+
+    color: #0d6efd;
+
+  
+
+  }
+
+  
+
+  .card-header {
+
+  
+
+    border-radius: 1rem 1rem 0 0 !important;
+
+  
+
+  }
+
+  
+
+  .table {
+
+  
+
+    border-radius: 0.75rem;
+
+  
+
+    overflow: hidden;
+
+  
+
+  }
+
+  
+
+</style>
+
+  
+
+{% include '_chatbot_widget.html' %}
+
+  
+
+
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 24px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 56px;
+
+  
+
+  height: 56px;
+
+  
+
+  border-radius: 50%;
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  border: none;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  cursor: pointer;
+
+  
+
+  z-index: 9999;
+
+  
+
+  display: flex;
+
+  
+
+  align-items: center;
+
+  
+
+  justify-content: center;
+
+  
+
+  font-size: 28px;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 90px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 320px;
+
+  
+
+  z-index: 9999;
+
+  
+
+  background: #fff;
+
+  
+
+  border: 1px solid #ccc;
+
+  
+
+  border-radius: 8px;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  display: none;
+
+  
+
+  flex-direction: column;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  padding: 8px 12px;
+
+  
+
+  border-radius: 8px 8px 0 0;
+
+  
+
+  font-weight: bold;
+
+  
+
+  display: flex;
+
+  
+
+  justify-content: space-between;
+
+  
+
+  align-items: center;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  height: 200px;
+
+  
+
+  overflow: auto;
+
+  
+
+  padding: 10px;
+
+  
+
+  font-size: 14px;
+
+  
+
+  background: #f9f9f9;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: none;
+
+  
+
+  border: none;
+
+  
+
+  color: #fff;
+
+  
+
+  font-size: 20px;
+
+  
+
+  cursor: pointer;
+
+  
+
+  margin-left: 8px;
+
+  
+
+}
+
+  
+
+</style>
+
+  
+
+
+
+  
+
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#007bff"/><path d="M7 10C7 8.34315 8.34315 7 10 7H14C15.6569 7 17 8.34315 17 10V14C17 15.6569 15.6569 17 14 17H10C8.34315 17 7 15.6569 7 14V10Z" fill="white"/><circle cx="9.5" cy="12" r="1.5" fill="#007bff"/><circle cx="14.5" cy="12" r="1.5" fill="#007bff"/></svg>
+
+  
+
+</button>
+
+  
+
+
+
+  
+
+  <div id="chat-header">
+
+  
+
+    AI Assistant
+
+  
+
+    <button id="chat-close" onclick="closeChatWidget()">&times;</button>
+
+  
+
+  </div>
+
+  
+
+  <div id="chat-log"></div>
+
+  
+
+  <div style="display:flex;border-top:1px solid #eee;">
+
+  
+
+    <input type="text" id="chat-input" placeholder="Type your message..." style="flex:1;border:none;padding:8px;font-size:14px;outline:none;">
+
+  
+
+    <button onclick="sendMessage()" style="background:#007bff;color:#fff;border:none;padding:8px 16px;cursor:pointer;">Send</button>
+
+  
+
+  </div>
+
+  
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'flex';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'none';
+
+  
+
+  setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+
+  
+
+}
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'none';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'flex';
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const log = document.getElementById('chat-log');
+
+  
+
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+
+  
+
+    log.scrollTop = log.scrollHeight;
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const input = document.getElementById('chat-input');
+
+  
+
+    const message = input.value.trim();
+
+  
+
+    if (!message) return;
+
+  
+
+    appendMessage('You', message);
+
+  
+
+    input.value = '';
+
+  
+
+    fetch('/chatbot', {
+
+  
+
+        method: 'POST',
+
+  
+
+        headers: {'Content-Type': 'application/json'},
+
+  
+
+        body: JSON.stringify({message: message})
+
+  
+
+    })
+
+  
+
+    .then(response => response.json())
+
+  
+
+    .then(data => appendMessage('Bot', data.response))
+
+  
+
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+
+  
+
+}
+
+  
+
+
+
+  
+
+    if (e.key === 'Enter') sendMessage();
+
+  
+
+});
+
+  
+
+</script>
+
+  
+
+
+  
+
+
+  
+
+<div class="container-fluid py-4">
+
+  
+
+  <div class="row justify-content-center mb-4">
+
+  
+
+    <div class="col-12">
+
+  
+
+      <h1 class="dashboard-title text-center mb-3" style="font-size:2.7rem; background: linear-gradient(90deg, #6c63ff, #00cfff, #e040fb, #6c63ff); background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: gradientMove 8s infinite linear alternate; text-shadow: 0 2px 12px #00cfff99, 0 0 40px #1976d2cc; letter-spacing:0.04em;"> <i class="bi bi-stars"></i> Event Management Dashboard </h1>
+
+  
+
+    </div>
+
+  
+
+  </div>
+
+  
+
+  <div class="row g-4 mb-4">
+
+  
+
+    <div class="col-md-4">
+
+  
+
+      <div class="glass-card card-stats text-center p-4 h-100">
+
+  
+
+        <div class="icon-circle mb-2"><i class="bi bi-calendar-event"></i></div>
+
+  
+
+        <div class="stat-label">Upcoming Events</div>
+
+  
+
+        <div class="stat-value display-5 fw-bold">{{ stats.upcoming }}</div>
+
+  
+
+      </div>
+
+  
+
+    </div>
+
+  
+
+    <div class="col-md-4">
+
+  
+
+      <div class="glass-card card-stats text-center p-4 h-100">
+
+  
+
+        <div class="icon-circle mb-2"><i class="bi bi-calendar-day"></i></div>
+
+  
+
+        <div class="stat-label">Today's Events</div>
+
+  
+
+        <div class="stat-value display-5 fw-bold">{{ stats.today }}</div>
+
+  
+
+      </div>
+
+  
+
+    </div>
+
+  
+
+    <div class="col-md-4">
+
+  
+
+      <div class="glass-card card-stats text-center p-4 h-100">
+
+  
+
+        <div class="icon-circle mb-2"><i class="bi bi-calendar-check"></i></div>
+
+  
+
+        <div class="stat-label">Completed Events</div>
+
+  
+
+        <div class="stat-value display-5 fw-bold">{{ stats.completed }}</div>
+
+  
+
+      </div>
+
+  
+
+    </div>
+
+  
+
+  </div>
+
+  
+
+  <div class="row mb-4">
+
+  
+          <option value="title" {% if request.args.get('sort_by') == 'title' %}selected{% endif %}>Sort by Title</option>
+
+  
+
+          <option value="location" {% if request.args.get('sort_by') == 'location' %}selected{% endif %}>Sort by Location</option>
+
+  
+
+          <option value="status" {% if request.args.get('sort_by') == 'status' %}selected{% endif %}>Sort by Status</option>
+
+  
+
+        </select>
+
+  
+
+        <select class="form-select" name="sort_order" aria-label="Sort order">
+
+  
+
+          <option value="asc" {% if request.args.get('sort_order', 'asc') == 'asc' %}selected{% endif %}>Ascending</option>
+
+  
+
+          <option value="desc" {% if request.args.get('sort_order') == 'desc' %}selected{% endif %}>Descending</option>
+
+  
+
+        </select>
+
+  
+
+        <button class="btn btn-outline-primary btn-label-highlight" type="submit"><i class="bi bi-search"></i> Search</button>
+
+  
+
+        <a href="/" class="btn btn-outline-secondary btn-label-highlight">Clear</a>
+
+  
+
+      </form>
+
+  
+
+      <div class="table-responsive mb-4">
+  <table class="table table-bordered table-striped align-middle">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Date</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in events %}
+      <tr>
+        <td>{{ event.id }}</td>
+        <td>{{ event.title }}</td>
+        <td>{{ event.date }}</td>
+        <td>{{ event.location }}</td>
+        <td>{{ event.status }}</td>
+        <td>
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+  <a href="/download_predictions/{{ event.id }}" class="btn btn-sm btn-outline-info btn-label-highlight">Download Predictions</a>
+</div>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if events|length == 0 %}
+      <tr><td colspan="6" class="text-center text-muted">No events found.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+  
+
+    </div>
+
+  
+
+  </div>
+
+  
+
+  <!-- Event Table and other content here -->
+
+  
+
+  
+
+  
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+  <div style="height: 6px; border-radius: 6px; margin-bottom: 0.5rem; background: linear-gradient(90deg, #6a82fb 0%, #00cfff 100%);"></div>
+
+  
+
+  <div style="width:100vw; text-align:center; position:fixed; bottom:0; left:0; z-index:1000; background:#f9f9f9; color:#444; font-size:16px; padding:8px 0; box-shadow:0 -1px 6px #0001;">© 2025 Event Manager | v1.0</div>
+
+  
+
+
+
+  
+
+{% include '_chatbot_widget.html' %}
+
+  
+
+
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 24px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 56px;
+
+  
+
+  height: 56px;
+
+  
+
+  border-radius: 50%;
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  border: none;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  cursor: pointer;
+
+  
+
+  z-index: 9999;
+
+  
+
+  display: flex;
+
+  
+
+  align-items: center;
+
+  
+
+  justify-content: center;
+
+  
+
+  font-size: 28px;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 90px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 320px;
+
+  
+
+  z-index: 9999;
+
+  
+
+  background: #fff;
+
+  
+
+  border: 1px solid #ccc;
+
+  
+
+  border-radius: 8px;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  display: none;
+
+  
+
+  flex-direction: column;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  padding: 8px 12px;
+
+  
+
+  border-radius: 8px 8px 0 0;
+
+  
+
+  font-weight: bold;
+
+  
+
+  display: flex;
+
+  
+
+  justify-content: space-between;
+
+  
+
+  align-items: center;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  height: 200px;
+
+  
+
+  overflow: auto;
+
+  
+
+  padding: 10px;
+
+  
+
+  font-size: 14px;
+
+  
+
+  background: #f9f9f9;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: none;
+
+  
+
+  border: none;
+
+  
+
+  color: #fff;
+
+  
+
+  font-size: 20px;
+
+  
+
+  cursor: pointer;
+
+  
+
+  margin-left: 8px;
+
+  
+
+}
+
+  
+
+</style>
+
+  
+
+
+
+  
+
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#007bff"/><path d="M7 10C7 8.34315 8.34315 7 10 7H14C15.6569 7 17 8.34315 17 10V14C17 15.6569 15.6569 17 14 17H10C8.34315 17 7 15.6569 7 14V10Z" fill="white"/><circle cx="9.5" cy="12" r="1.5" fill="#007bff"/><circle cx="14.5" cy="12" r="1.5" fill="#007bff"/></svg>
+
+  
+
+</button>
+
+  
+
+
+
+  
+
+  <div id="chat-header">
+
+  
+
+    AI Assistant
+
+  
+
+    <button id="chat-close" onclick="closeChatWidget()">&times;</button>
+
+  
+
+  </div>
+
+  
+
+  <div id="chat-log"></div>
+
+  
+
+  <div style="display:flex;border-top:1px solid #eee;">
+
+  
+
+    <input type="text" id="chat-input" placeholder="Type your message..." style="flex:1;border:none;padding:8px;font-size:14px;outline:none;">
+
+  
+
+    <button onclick="sendMessage()" style="background:#007bff;color:#fff;border:none;padding:8px 16px;cursor:pointer;">Send</button>
+
+  
+
+  </div>
+
+  
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'flex';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'none';
+
+  
+
+  setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+
+  
+
+}
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'none';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'flex';
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const log = document.getElementById('chat-log');
+
+  
+
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+
+  
+
+    log.scrollTop = log.scrollHeight;
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const input = document.getElementById('chat-input');
+
+  
+
+    const message = input.value.trim();
+
+  
+
+    if (!message) return;
+
+  
+
+    appendMessage('You', message);
+
+  
+
+    input.value = '';
+
+  
+
+    fetch('/chatbot', {
+
+  
+
+        method: 'POST',
+
+  
+
+        headers: {'Content-Type': 'application/json'},
+
+  
+
+        body: JSON.stringify({message: message})
+
+  
+
+    })
+
+  
+
+    .then(response => response.json())
+
+  
+
+    .then(data => appendMessage('Bot', data.response))
+
+  
+
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+
+  
+
+}
+
+  
+
+
+
+  
+
+    if (e.key === 'Enter') sendMessage();
+
+  
+
+});
+
+  
+
+</script>
+
+  
+
+
+  
+
+
+
+  
+
+@keyframes gradientMove {
+
+  
+
+  0% {background-position:0% 50%}
+
+  
+
+  50% {background-position:100% 50%}
+
+  
+
+  100% {background-position:0% 50%}
+
+  
+
+}
+
+  
+
+.glass-card {
+
+  
+
+  background: rgba(255,255,255,0.75);
+
+  
+
+  border-radius: 2rem;
+
+  
+
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.12);
+
+  
+
+  border: 2px solid rgba(108,99,255,0.13);
+
+  
+
+  backdrop-filter: blur(10px);
+
+  
+
+  position: relative;
+
+  
+
+}
+
+  
+
+body.dark-mode .glass-card {
+
+  
+
+  background: rgba(30,32,60,0.85);
+
+  
+
+  color: #f4f4f4;
+
+  
+
+}
+
+  
+
+.icon-circle {
+
+  
+
+  width: 3.2rem; height: 3.2rem; border-radius: 50%; background: linear-gradient(135deg,#6c63ff,#00cfff,#e040fb); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 0.5rem auto; box-shadow: 0 2px 12px 0 #6c63ff33;
+
+  
+
+}
+
+  
+
+.stat-label { font-size: 1.1rem; font-weight: 600; color: #6c63ff; letter-spacing: 0.01em; }
+
+  
+
+.stat-value { font-size: 2.2rem; }
+
+  
+
+.gradient-bar {background-size: 400% 400%;}
+
+  
+
+</style>
+
+  
+
+    <div class="row mb-4">
+
+  
+
+        <div class="col-12 col-md-auto mb-2 mb-md-0 d-flex gap-3">
+
+  
+
+            <a href="/add" class="btn btn-success btn-label-highlight" aria-label="Add Event"><i class="bi bi-plus-circle"></i> Add Event</a>
+
+  
+
+            <a href="/calendar" class="btn btn-primary btn-modern" aria-label="View Calendar">Calendar</a>
+
+  
+
+            <a href="/?status=" class="btn btn-outline-primary {% if not request.args.get('status') %}active{% endif %}">All Events</a>
+
+  
+
+            <a href="/?status=Cancelled" class="btn btn-outline-danger {% if request.args.get('status') == 'Cancelled' %}active{% endif %}">Show Cancelled</a>
+
+  
+
+        </div>
+
+  
+
+    </div>
+
+  
+
+    <div class="dashboard-gradient-bar"></div
+
+  
+
+    <h1 class="mb-4 dashboard-title" style="color:#fff;text-shadow:0 2px 12px #00cfff,0 0 40px #1976d2;">Event Management Dashboard</h1>
+
+  
+
+    <!-- Event Search Bar added above -->
+
+  
+
+    <div class="row mb-3">
+
+  
+
+        <div class="col-md-4">
+
+  
+
+            <div class="card text-center">
+
+  
+
+                <div class="card-body">
+
+  
+
+                    <h5 class="card-title">Upcoming Events</h5>
+
+  
+
+                    <p class="card-text display-6">{{ stats.upcoming }}</p>
+
+  
+
+                </div>
+
+  
+
+            </div>
+
+  
+
+        </div>
+
+  
+
+        <div class="col-md-4">
+
+  
+
+            <div class="card text-center">
+
+  
+
+                <div class="card-body">
+
+  
+
+                    <h5 class="card-title">Today's Events</h5>
+
+  
+
+                    <p class="card-text display-6">{{ stats.today }}</p>
+
+  
+
+                </div>
+
+  
+
+            </div>
+
+  
+
+        </div>
+
+  
+
+        <div class="col-md-4">
+
+  
+
+            <div class="card text-center">
+
+  
+
+                <div class="card-body">
+
+  
+
+                    <h5 class="card-title">Completed Events</h5>
+
+  
+
+                    <p class="card-text display-6">{{ stats.completed }}</p>
+
+  
+
+                </div>
+
+  
+
+            </div>
+
+  
+
+        </div>
+
+  
+
+    </div>
+
+  
+
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+
+  
+
+        <form class="d-flex" method="get" action="/">
+
+  
+
+            <input class="form-control me-2" type="search" name="q" placeholder="Search events by title..." value="{{ request.args.get('q', '') }}" aria-label="Search">
+
+  
+
+            <input class="form-control me-2" type="date" name="date" value="{{ request.args.get('date', '') }}" aria-label="Date">
+
+  
+
+            <input class="form-control me-2" type="text" name="location" placeholder="Location" value="{{ request.args.get('location', '') }}" aria-label="Location">
+
+  
+
+            <select class="form-select me-2" name="status" aria-label="Status">
+
+  
+
+                <option value="">Any Status</option>
+
+  
+
+                <option value="Upcoming" {% if request.args.get('status') == 'Upcoming' %}selected{% endif %}>Upcoming</option>
+
+  
+
+                <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+
+  
+
+                <option value="Completed" {% if request.args.get('status') == 'Completed' %}selected{% endif %}>Completed</option>
+
+  
+
+                <option value="Cancelled" {% if request.args.get('status') == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+
+  
+
+            </select>
+
+  
+
+            <select class="form-select me-2" name="sort_by" aria-label="Sort by">
+
+  
+
+                <option value="date" {% if request.args.get('sort_by', 'date') == 'date' %}selected{% endif %}>Sort by Date</option>
+
+  
+
+                <option value="title" {% if request.args.get('sort_by') == 'title' %}selected{% endif %}>Sort by Title</option>
+
+  
+
+                <option value="location" {% if request.args.get('sort_by') == 'location' %}selected{% endif %}>Sort by Location</option>
+
+  
+
+                <option value="status" {% if request.args.get('sort_by') == 'status' %}selected{% endif %}>Sort by Status</option>
+
+  
+
+            </select>
+
+  
+
+            <select class="form-select me-2" name="sort_order" aria-label="Sort order">
+
+  
+
+                <option value="asc" {% if request.args.get('sort_order', 'asc') == 'asc' %}selected{% endif %}>Ascending</option>
+
+  
+
+                <option value="desc" {% if request.args.get('sort_order') == 'desc' %}selected{% endif %}>Descending</option>
+
+  
+
+            </select>
+
+  
+
+            <button class="btn btn-outline-primary btn-label-highlight me-2" type="submit"><i class="bi bi-search"></i> Search</button>
+
+  
+
+            <a href="/" class="btn btn-outline-secondary btn-label-highlight">Clear</a>
+
+  
+
+        </form>
+
+  
+
+        <button type="button" class="btn btn-outline-info btn-label-highlight mb-3 me-2" data-bs-toggle="modal" data-bs-target="#cancelledEventsModal">
+
+  
+
+    <i class="bi bi-pie-chart"></i> Show Cancelled Events
+
+  
+
+</button>
+
+  
+
+        <a href="/add" class="btn btn-outline-success mb-3" style="height:38px; padding: 0 16px; font-size: 1rem; display:inline-flex; align-items:center;" data-bs-toggle="tooltip" title="Create a new event">
+
+  
+
+            <i class="bi bi-plus-circle"></i> Add Event
+
+  
+
+        </a>
+
+  
+
+
+
+  
+
+        <!-- Cancelled Events Modal -->
+
+  
+
+        <div class="modal fade" id="cancelledEventsModal" tabindex="-1" aria-labelledby="cancelledEventsModalLabel" aria-hidden="true">
+
+  
+
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+
+  
+
+    <div class="modal-content">
+
+  
+
+      <div class="modal-header">
+
+  
+
+        <h5 class="modal-title" id="cancelledEventsModalLabel">Cancelled Events</h5>
+
+  
+
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+  
+
+      </div>
+
+  
+
+      <div class="modal-body" style="max-height:65vh; overflow-y:auto;">
+
+  
+
+        <div class="row g-3">
+
+  
+
+          <div class="col-md-7">
+
+  
+
+            <ul class="list-group mb-3">
+
+  
+
+              {% set cancelled = events|selectattr('status', 'equalto', 'Cancelled')|list %}
+
+  
+
+              {% if cancelled %}
+
+  
+
+                {% for event in cancelled %}
+
+  
+
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+
+  
+
+                    <span>{{ event.title }} <span class="badge bg-secondary ms-2">{{ current_user.email }}</span></span>
+
+  
+
+                    <span class="text-muted small">{{ event.location }}</span>
+
+  
+
+                  </li>
+
+  
+
+                {% endfor %}
+
+  
+
+              {% else %}
+
+  
+
+                <li class="list-group-item text-center text-muted">No cancelled events.</li>
+
+  
+
+              {% endif %}
+
+  
+
+            </ul>
+
+  
+
+          </div>
+
+  
+
+          <div class="col-md-5 d-flex align-items-center justify-content-center">
+
+  
+
+            <div style="width:100%;max-width:270px;">
+
+  
+
+              <canvas id="statusPieChart" style="width:100%!important;height:auto!important;"></canvas>
+
+  
+
+            </div>
+
+  
+
+          </div>
+
+  
+
+        </div>
+
+  
+
+      </div>
+
+  
+
+      <div class="modal-footer">
+
+  
+
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+  
+
+      </div>
+
+  
+
+    </div>
+
+  
+
+  </div>
+
+  
+
+</div>
+
+  
+
+              </div>
+
+  
+
+              <div class="modal-body">
+
+  
+
+                <div class="row">
+
+  
+
+                  <div class="col-md-7">
+
+  
+
+                    <ul class="list-group mb-3">
+
+  
+
+                      {% set cancelled = events|selectattr('status', 'equalto', 'Cancelled')|list %}
+
+  
+
+                      {% if cancelled %}
+
+  
+
+                        {% for event in cancelled %}
+
+  
+
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+
+  
+
+                            <span>{{ event.title }} <span class="badge bg-secondary ms-2">{{ current_user.email }}</span></span>
+
+  
+
+                            <span class="text-muted small">{{ event.location }}</span>
+
+  
+
+                          </li>
+
+  
+
+                        {% endfor %}
+
+  
+
+                      {% else %}
+
+  
+
+                        <li class="list-group-item text-center text-muted">No cancelled events.</li>
+
+  
+
+                      {% endif %}
+
+  
+
+                    </ul>
+
+  
+
+                  </div>
+
+  
+
+                  <div class="col-md-5 d-flex align-items-center justify-content-center">
+
+  
+
+                    <canvas id="statusPieChart" width="220" height="220"></canvas>
+
+  
+
+                  </div>
+
+  
+
+                </div>
+
+  
+
+              </div>
+
+  
+
+              <div class="modal-footer">
+
+  
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+  
+
+              </div>
+
+  
+
+            </div>
+
+  
+
+          </div>
+
+  
+
+        </div>
+
+  
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  
+
+        
+
+  
+
+          document.addEventListener('DOMContentLoaded', function() {
+
+  
+
+            var ctx = document.getElementById('statusPieChart');
+
+  
+
+            if (ctx) {
+
+  
+
+              var statusCounts = {
+  'Upcoming': {{ status_counts['Upcoming'] }},
+  'In Progress': {{ status_counts['In Progress'] }},
+  'Completed': {{ status_counts['Completed'] }},
+  'Cancelled': {{ status_counts['Cancelled'] }}
+};
+
+  
+
+              new Chart(ctx, {
+
+  
+
+                type: 'pie',
+
+  
+
+                data: {
+
+  
+
+                  labels: Object.keys(statusCounts),
+
+  
+
+                  datasets: [{
+
+  
+
+                    data: Object.values(statusCounts),
+
+  
+
+                    backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545'],
+
+  
+
+                  }]
+
+  
+
+                },
+
+  
+
+                options: {
+
+  
+
+                  plugins: {
+
+  
+
+                    legend: { position: 'bottom' }
+
+  
+
+                  }
+
+  
+
+                }
+
+  
+
+              });
+
+  
+
+            }
+
+  
+
+          });
+
+  
+
+        </script>
+  
+
+      </tbody>
+
+  
+
+        </table>
+
+  
+
+      </div>
+
+  
+
+      <!-- Removed duplicate table/form/endfor block to fix Jinja2 error -->
+
+  
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+.dashboard-glass-container {
+
+  
+
+    background: rgba(255,255,255,0.18);
+
+  
+
+    border-radius: 2rem;
+
+  
+
+    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37),0 0 0 4px #00cfff44;
+
+  
+
+    backdrop-filter: blur(18px);
+
+  
+
+    border: 1.5px solid rgba(255,255,255,0.22);
+
+  
+
+    padding: 2.5rem 1.5rem 2rem 1.5rem;
+
+  
+
+    position: relative;
+
+  
+
+    overflow: hidden;
+
+  
+
+    font-family: 'Poppins', Arial, sans-serif;
+
+  
+
+    margin-bottom: 2rem;
+
+  
+
+}
+
+  
+
+.dashboard-gradient-bar {
+
+  
+
+    position: absolute;
+
+  
+
+    top: 0; left: 0; width: 100%; height: 7px;
+
+  
+
+    background: linear-gradient(90deg,#007bff,#0056b3 80%);
+
+  
+
+    filter: blur(0.5px);
+
+  
+
+    border-radius: 2rem 2rem 0 0;
+
+  
+
+    animation: gradientMove 3s linear infinite;
+
+  
+
+    z-index: 2;
+
+  
+
+}
+
+  
+
+@keyframes gradientMove {
+
+  
+
+    0% {background-position:0% 50%;}
+
+  
+
+    100% {background-position:100% 50%;}
+
+  
+
+}
+
+  
+
+.dashboard-title {
+
+  
+
+    font-weight: 700;
+
+  
+
+    letter-spacing: 0.03em;
+
+  
+
+    color: #fff;
+
+  
+
+    text-shadow: 0 2px 12px #00cfff,0 0 40px #1976d2;
+
+  
+
+}
+
+  
+
+.dashboard-glass-stats {
+
+  
+
+    background: rgba(255,255,255,0.27);
+
+  
+
+    border-radius: 1.2rem;
+
+  
+
+    box-shadow: 0 4px 24px 0 rgba(34, 60, 80, 0.12);
+
+  
+
+    backdrop-filter: blur(8px);
+
+  
+
+    border: 1.2px solid rgba(255,255,255,0.16);
+
+  
+
+}
+
+  
+
+.dashboard-glass-table {
+
+  
+
+    background: rgba(255,255,255,0.13);
+
+  
+
+    border-radius: 1.25rem;
+
+  
+
+    overflow: hidden;
+
+  
+
+    box-shadow: 0 2px 12px 0 rgba(31,38,135,0.07);
+
+  
+
+}
+
+  
+
+.dashboard-glass-thead th {
+
+  
+
+    background: linear-gradient(90deg,#007bff,#0056b3 90%);
+
+  
+
+    color: #fff;
+
+  
+
+    font-weight: 600;
+
+  
+
+    text-shadow: 0 2px 8px #1976d2;
+
+  
+
+    border: none;
+
+  
+
+    font-size: 1.1em;
+
+  
+
+    text-align: center;
+
+  
+
+}
+
+  
+
+.table th, .table td {
+
+  
+
+    text-align: center;
+
+  
+
+}
+
+  
+
+.dashboard-glass-table tbody tr {
+
+  
+
+    transition: background 0.2s, box-shadow 0.2s;
+
+  
+
+}
+
+  
+
+.dashboard-glass-table tbody tr:hover {
+
+  
+
+    background: rgba(0,207,255,0.07);
+
+  
+
+    box-shadow: 0 2px 16px 0 #00cfff33;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass {
+
+  
+
+    display: flex;
+
+  
+
+    flex-wrap: wrap;
+
+  
+
+    gap: 0.5rem;
+
+  
+
+    justify-content: flex-start;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass .btn {
+
+  
+
+    background: linear-gradient(90deg,#00cfff,#1976d2 80%);
+
+  
+
+    color: #fff;
+
+  
+
+    border: none;
+
+  
+
+    border-radius: 1.5rem;
+
+  
+
+    font-weight: 600;
+
+  
+
+    box-shadow: 0 2px 12px 0 #00cfff33;
+
+  
+
+    transition: background 0.2s, box-shadow 0.2s, transform 0.12s;
+
+  
+
+    padding-left: 1.1em;
+
+  
+
+    padding-right: 1.1em;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass .btn-warning {
+
+  
+
+    background: linear-gradient(90deg,#e3f0ff,#007bff 80%);
+
+  
+
+    color: #222;
+
+  
+
+    box-shadow: 0 2px 12px 0 #ffb34744;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass .btn-info {
+
+  
+
+    background: linear-gradient(90deg,#007bff,#0056b3 80%);
+
+  
+
+    color: #fff;
+
+  
+
+    box-shadow: 0 2px 12px 0 #00cfff33;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass .btn-primary {
+
+  
+
+    background: linear-gradient(90deg,#007bff,#0056b3 80%);
+
+  
+
+    color: #fff;
+
+  
+
+    box-shadow: 0 2px 12px 0 #6a82fb33;
+
+  
+
+}
+
+  
+
+.dashboard-actions-glass .btn:hover {
+
+  
+
+    filter: brightness(1.08) drop-shadow(0 0 8px #00cfff88);
+
+  
+
+    transform: translateY(-2px) scale(1.04);
+
+  
+
+}
+
+  
+
+@media (max-width: 576px) {
+
+  
+
+    .dashboard-actions-glass {
+
+  
+
+        flex-direction: column;
+
+  
+
+        align-items: stretch;
+
+  
+
+    }
+
+  
+
+    .dashboard-search-bar .form-control, .dashboard-search-bar .form-select {
+
+  
+
+    min-width: 160px;
+
+  
+
+    height: 48px;
+
+  
+
+    color: #222;
+
+  
+
+    font-size: 1rem;
+
+  
+
+    padding: 0 1rem;
+
+  
+
+    box-sizing: border-box;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar input::placeholder, .dashboard-search-bar select, .dashboard-search-bar .btn, .dashboard-search-bar label {
+
+  
+
+    color: #222 !important;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-search {
+
+  
+
+    min-width: 120px;
+
+  
+
+    height: 48px;
+
+  
+
+    font-size: 1rem;
+
+  
+
+    color: #fff;
+
+  
+
+    background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%);
+
+  
+
+    border: none;
+
+  
+
+    border-radius: 1.5rem;
+
+  
+
+    box-shadow: 0 2px 8px 0 #2196f344;
+
+  
+
+    font-weight: 600;
+
+  
+
+    padding: 0 1.5rem;
+
+  
+
+    transition: box-shadow 0.2s, background 0.2s;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-search:hover {
+
+  
+
+    box-shadow: 0 4px 16px 0 #2196f366;
+
+  
+
+    background: linear-gradient(90deg, #21cbf3 0%, #2196f3 100%);
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-clear {
+
+  
+
+    min-width: 100px;
+
+  
+
+    height: 48px;
+
+  
+
+    font-size: 1rem;
+
+  
+
+    color: #222;
+
+  
+
+    background: #e3f0ff;
+
+  
+
+    border: 1px solid #b0bec5;
+
+  
+
+    border-radius: 1.5rem;
+
+  
+
+    font-weight: 500;
+
+  
+
+    padding: 0 1.2rem;
+
+  
+
+    transition: background 0.2s, color 0.2s;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-clear:hover {
+
+  
+
+    background: #b0bec5;
+
+  
+
+    color: #fff;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-cancelled {
+
+  
+
+    min-width: 170px;
+
+  
+
+    height: 48px;
+
+  
+
+    font-size: 1.05rem;
+
+  
+
+    color: #21cbf3;
+
+  
+
+    background: #e3f7ff;
+
+  
+
+    border: 2px solid #21cbf3;
+
+  
+
+    border-radius: 1.5rem;
+
+  
+
+    font-weight: bold;
+
+  
+
+    box-shadow: 0 0 12px 0 #21cbf355;
+
+  
+
+    transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-cancelled:hover {
+
+  
+
+    background: #21cbf3;
+
+  
+
+    color: #fff;
+
+  
+
+    box-shadow: 0 2px 16px 0 #21cbf366;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-add-event {
+
+  
+
+    min-width: 120px;
+
+  
+
+    height: 48px;
+
+  
+
+    font-size: 1rem;
+
+  
+
+    color: #388e3c;
+
+  
+
+    background: #fff;
+
+  
+
+    border: 2px solid #388e3c;
+
+  
+
+    border-radius: 1.5rem;
+
+  
+
+    font-weight: 600;
+
+  
+
+    padding: 0 1.2rem;
+
+  
+
+    transition: background 0.2s, color 0.2s;
+
+  
+
+}
+
+  
+
+.dashboard-search-bar .btn-add-event:hover {
+
+  
+
+    background: #388e3c;
+
+  
+
+    color: #fff;
+
+  
+
+}
+
+  
+
+form {
+
+  
+
+        width: 100%;
+
+  
+
+        margin-bottom: 0.25rem;
+
+  
+
+    }
+
+  
+
+    .dashboard-glass-container {
+
+  
+
+        padding: 1rem 0.5rem 1.5rem 0.5rem;
+
+  
+
+    }
+
+  
+
+}
+
+  
+
+</style>
+
+  
+
+{% include '_chatbot_widget.html' %}
+
+  
+
+
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 24px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 56px;
+
+  
+
+  height: 56px;
+
+  
+
+  border-radius: 50%;
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  border: none;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  cursor: pointer;
+
+  
+
+  z-index: 9999;
+
+  
+
+  display: flex;
+
+  
+
+  align-items: center;
+
+  
+
+  justify-content: center;
+
+  
+
+  font-size: 28px;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  position: fixed;
+
+  
+
+  bottom: 90px;
+
+  
+
+  right: 24px;
+
+  
+
+  width: 320px;
+
+  
+
+  z-index: 9999;
+
+  
+
+  background: #fff;
+
+  
+
+  border: 1px solid #ccc;
+
+  
+
+  border-radius: 8px;
+
+  
+
+  box-shadow: 0 2px 8px #0002;
+
+  
+
+  display: none;
+
+  
+
+  flex-direction: column;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: #007bff;
+
+  
+
+  color: #fff;
+
+  
+
+  padding: 8px 12px;
+
+  
+
+  border-radius: 8px 8px 0 0;
+
+  
+
+  font-weight: bold;
+
+  
+
+  display: flex;
+
+  
+
+  justify-content: space-between;
+
+  
+
+  align-items: center;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  height: 200px;
+
+  
+
+  overflow: auto;
+
+  
+
+  padding: 10px;
+
+  
+
+  font-size: 14px;
+
+  
+
+  background: #f9f9f9;
+
+  
+
+}
+
+  
+
+
+
+  
+
+  background: none;
+
+  
+
+  border: none;
+
+  
+
+  color: #fff;
+
+  
+
+  font-size: 20px;
+
+  
+
+  cursor: pointer;
+
+  
+
+  margin-left: 8px;
+
+  
+
+}
+
+  
+
+</style>
+
+  
+
+
+
+  
+
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#007bff"/><path d="M7 10C7 8.34315 8.34315 7 10 7H14C15.6569 7 17 8.34315 17 10V14C17 15.6569 15.6569 17 14 17H10C8.34315 17 7 15.6569 7 14V10Z" fill="white"/><circle cx="9.5" cy="12" r="1.5" fill="#007bff"/><circle cx="14.5" cy="12" r="1.5" fill="#007bff"/></svg>
+
+  
+
+</button>
+
+  
+
+
+
+  
+
+  <div id="chat-header">
+
+  
+
+    AI Assistant
+
+  
+
+    <button id="chat-close" onclick="closeChatWidget()">&times;</button>
+
+  
+
+  </div>
+
+  
+
+  <div id="chat-log"></div>
+
+  
+
+  <div style="display:flex;border-top:1px solid #eee;">
+
+  
+
+    <input type="text" id="chat-input" placeholder="Type your message..." style="flex:1;border:none;padding:8px;font-size:14px;outline:none;">
+
+  
+
+    <button onclick="sendMessage()" style="background:#007bff;color:#fff;border:none;padding:8px 16px;cursor:pointer;">Send</button>
+
+  
+
+  </div>
+
+  
+
+</div>
+
+  
+
+
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'flex';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'none';
+
+  
+
+  setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+
+  
+
+}
+
+  
+
+
+
+  
+
+  document.getElementById('chat-widget').style.display = 'none';
+
+  
+
+  document.getElementById('chat-fab').style.display = 'flex';
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const log = document.getElementById('chat-log');
+
+  
+
+    log.innerHTML += `<b>${sender}:</b> ${text}<br>`;
+
+  
+
+    log.scrollTop = log.scrollHeight;
+
+  
+
+}
+
+  
+
+
+
+  
+
+    const input = document.getElementById('chat-input');
+
+  
+
+    const message = input.value.trim();
+
+  
+
+    if (!message) return;
+
+  
+
+    appendMessage('You', message);
+
+  
+
+    input.value = '';
+
+  
+
+    fetch('/chatbot', {
+
+  
+
+        method: 'POST',
+
+  
+
+        headers: {'Content-Type': 'application/json'},
+
+  
+
+        body: JSON.stringify({message: message})
+
+  
+
+    })
+
+  
+
+    .then(response => response.json())
+
+  
+
+    .then(data => appendMessage('Bot', data.response))
+
+  
+
+    .catch(() => appendMessage('Bot', 'Sorry, there was an error contacting the assistant.'));
+
+  
+
+}
+
+  
+
+
+
+  
+
+    if (e.key === 'Enter') sendMessage();
+
+  
+
+});
+
+  
+
+</script>
+
+  
+
+
+  
+

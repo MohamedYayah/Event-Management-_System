@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Face Check-In</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+{% include 'navbar.html' %}
+<div class="container py-4">
+    <h1 class="mb-4 text-info">Face Check-In for {{ event.title }}</h1>
+{% if session['face_checkin_attendee_id'] %}
+  <div class="alert alert-info">Checking in for: <strong>{% for attendee in attendees %}{% if attendee.id == session['face_checkin_attendee_id'] %}{{ attendee.name }}{% endif %}{% endfor %}</strong></div>
+  <form id="photoForm" method="post" enctype="multipart/form-data" autocomplete="off">
+      <div class="mb-3">
+          <label class="form-label">Upload a photo to check in:</label>
+          <input type="file" class="form-control" name="photo" accept="image/*">
+      </div>
+      <div class="mb-3">
+          <label class="form-label">Or use your webcam:</label><br>
+          <button type="button" class="btn btn-info mb-2" id="startWebcam" data-bs-toggle="tooltip" title="Start your webcam">Start Webcam</button>
+          <button type="button" class="btn btn-success mb-2" id="capturePhoto" style="display:none;" data-bs-toggle="tooltip" title="Capture a photo from webcam">Capture Photo</button>
+          <video id="webcam" width="320" height="240" autoplay style="display:none;"></video>
+          <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+          <img id="preview" style="display:none; margin-top:10px; max-width:320px; border:1px solid #ccc;" />
+      </div>
+      <input type="hidden" name="webcam_photo" id="webcam_photo">
+      <button type="submit" class="btn btn-primary">Check In</button>
+      <a href="/edit/{{ event.id }}" class="btn btn-secondary ms-2">Back to Event</a>
+      <a href="{{ url_for('face_checkin', event_id=event.id) }}?change_attendee=1" class="btn btn-link">Change Attendee</a>
+      <div class="alert alert-warning mt-2" id="photoRequiredAlert" style="display:none;">A photo is required to check in. Please upload or capture a photo.</div>
+  </form>
+{% else %}
+  <div class="alert alert-warning">No attendee selected. Please pick your name first.</div>
+{% endif %}
+<script>
+// Enhanced validation: require either file upload or webcam photo
+const photoForm = document.getElementById('photoForm');
+const photoInput = document.querySelector('input[type="file"][name="photo"]');
+const webcamPhotoInput = document.getElementById('webcam_photo');
+const photoRequiredAlert = document.getElementById('photoRequiredAlert');
+photoForm.onsubmit = function(e) {
+    if (!photoInput.value && !webcamPhotoInput.value) {
+        photoRequiredAlert.style.display = '';
+        e.preventDefault();
+        return false;
+    } else {
+        photoRequiredAlert.style.display = 'none';
+    }
+};
+const startBtn = document.getElementById('startWebcam');
+const captureBtn = document.getElementById('capturePhoto');
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('canvas');
+const preview = document.getElementById('preview');
+let stream = null;
+startBtn.onclick = async function() {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.style.display = 'block';
+    captureBtn.style.display = 'inline-block';
+    canvas.style.display = 'none';
+    preview.style.display = 'none';
+};
+captureBtn.onclick = function() {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    startBtn.style.display = 'inline-block';
+    // Convert canvas to data URL and set hidden input
+    const dataUrl = canvas.toDataURL('image/png');
+    webcamPhotoInput.value = dataUrl;
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    if (stream) { stream.getTracks().forEach(track => track.stop()); }
+};
+photoInput.onchange = function(e) {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.src = ev.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+};
+</script>
+    {% if match_info %}
+    <div class="alert alert-info mt-3">{{ match_info }}</div>
+    {% endif %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-info mt-3" id="flash-message">{{ messages[0] }}</div>
+<script>
+setTimeout(function() {
+  var flash = document.getElementById('flash-message');
+  if(flash) flash.style.display = 'none';
+}, 3000);
+</script>
+    {% endif %}
+    {% endwith %}
+    <hr>
+    <h4>Attendees</h4>
+    <ul class="list-group">
+        {% for attendee in attendees %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ attendee.name }}
+            <span class="badge bg-{{ 'success' if attendee.status == 'Checked In' else 'secondary' }}">{{ attendee.status }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+<footer class="text-center py-3" style="position:fixed;left:0;bottom:0;width:100vw;background:#f8f9fa;color:#007bff;font-weight:600;z-index:9999;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+</body>
+</html>

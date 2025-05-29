@@ -1,0 +1,84 @@
+<!-- Ensure Bootstrap 5 JS and Popper are loaded -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qQ2l+gQ9h9vDOMkMt2rtI8BGG99nmHn7+PBkO5RAwOB1p5MNDoAuCEr0aKBslrG" crossorigin="anonymous"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const webcamBtn = document.getElementById('webcamBtn');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const webcamSection = document.getElementById('webcamSection');
+  const uploadSection = document.getElementById('uploadSection');
+  const webcam = document.getElementById('webcam');
+  const captureBtn = document.getElementById('captureBtn');
+  const canvas = document.getElementById('canvas');
+  const photoInput = document.getElementById('photoInput');
+  const previewImg = document.getElementById('previewImg');
+  const faceImageInput = document.getElementById('faceImageInput');
+  let stream = null;
+
+  if (webcamBtn) {
+    webcamBtn.onclick = function() {
+      webcamSection.style.display = '';
+      uploadSection.style.display = 'none';
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(s) {
+            stream = s;
+            webcam.srcObject = stream;
+          })
+          .catch(function(err) {
+            alert('Could not access webcam. Please check your browser settings or try a different device.');
+            console.error('Webcam error:', err);
+          });
+      } else {
+        alert('Webcam not supported in this browser.');
+      }
+    };
+  }
+
+  if (uploadBtn) {
+    uploadBtn.onclick = function() {
+      uploadSection.style.display = '';
+      webcamSection.style.display = 'none';
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+    };
+  }
+
+  if (captureBtn) {
+    captureBtn.onclick = function() {
+      canvas.style.display = '';
+      canvas.getContext('2d').drawImage(webcam, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob) {
+        let reader = new FileReader();
+        reader.onloadend = function() {
+          faceImageInput.value = reader.result;
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg');
+    };
+  }
+
+  if (photoInput) {
+    photoInput.onchange = function(e) {
+      if (e.target.files && e.target.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+          previewImg.src = ev.target.result;
+          previewImg.style.display = '';
+          faceImageInput.value = ev.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    };
+  }
+
+  // Set attendee_id in modal form if dropdown changes
+  var dropdown = document.getElementById('attendee_name');
+  if(dropdown) {
+    dropdown.addEventListener('change', function() {
+      document.getElementById('modalAttendeeId').value = this.value;
+    });
+  }
+});
+</script>

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Admin Profile{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-person-badge me-2"></i>Admin Profile</h4>
+        </div>
+        <div class="card-body">
+  <!-- Profile Picture Upload/Display -->
+  <form class="mb-4" method="post" action="{{ url_for('admin_upload_profile_picture') }}" enctype="multipart/form-data">
+    <h6>Profile Picture</h6>
+    <div class="mb-2">
+      {% if profile and profile.profile_picture %}
+        <img src="{{ url_for('static', filename='profile_pics/' ~ profile.profile_picture) }}" alt="Profile Picture" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+      {% else %}
+        <img src="{{ url_for('static', filename='profile_pics/default.png') }}" alt="Profile Picture" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+      {% endif %}
+    </div>
+    <div class="input-group mb-2">
+      <input type="file" class="form-control" name="profile_picture" accept="image/*">
+      <button class="btn btn-outline-primary" type="submit">Upload</button>
+    </div>
+  </form>
+          <form class="mb-4" method="post" action="{{ url_for('admin_profile') }}">
+            <h6>Profile Information</h6>
+            <div class="mb-2">
+              <label>Name</label>
+              <input type="text" class="form-control" name="name" value="{{ profile.name if profile else '' }}" required>
+            </div>
+            <div class="mb-2">
+              <label>Phone Number</label>
+              <input type="text" class="form-control" name="phone" value="{{ profile.phone if profile else '' }}">
+            </div>
+            <div class="mb-2">
+              <label>Address</label>
+              <input type="text" class="form-control" name="address" value="{{ profile.address if profile else '' }}">
+            </div>
+            <div class="mb-2">
+              <label>Gender</label>
+              <select class="form-select" name="gender">
+                <option value="" {% if not profile or not profile.gender %}selected{% endif %}>Select Gender</option>
+                <option value="Male" {% if profile and profile.gender=='Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if profile and profile.gender=='Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if profile and profile.gender=='Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label>City</label>
+              <input type="text" class="form-control" name="city" value="{{ profile.city if profile else '' }}">
+            </div>
+            <button class="btn btn-outline-primary" type="submit">Update Profile</button>
+          </form>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Admin Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Profile Settings{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Profile Settings</h4>
+        </div>
+        <div class="card-body">
+  <p class="lead">Welcome, <strong>{{ user.email }}</strong></p>
+
+  <!-- Profile Picture Upload/Display -->
+  <form class="mb-4" method="post" action="{{ url_for('update_profile_picture') }}" enctype="multipart/form-data">
+    <h6>Profile Picture</h6>
+    <div class="mb-2">
+      {% if profile and profile.profile_picture %}
+        <img src="{{ url_for('static', filename='profile_pics/' ~ profile.profile_picture) }}" alt="Profile Picture" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+      {% else %}
+        <img src="{{ url_for('static', filename='profile_pics/default.png') }}" alt="Profile Picture" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+      {% endif %}
+    </div>
+    <div class="input-group mb-2">
+      <input type="file" class="form-control" name="profile_picture" accept="image/*">
+      <button class="btn btn-outline-primary" type="submit">Upload</button>
+    </div>
+  </form>
+
+  <!-- Profile Info Update -->
+  <form class="mb-4" method="post" action="{{ url_for('update_profile_info') }}">
+    <h6>Profile Information</h6>
+    <div class="mb-2">
+      <label>Name</label>
+      <input type="text" class="form-control" name="name" value="{{ profile.name if profile else '' }}" required>
+    </div>
+    <div class="mb-2">
+      <label>Phone Number</label>
+      <input type="text" class="form-control" name="phone" value="{{ profile.phone if profile else '' }}">
+    </div>
+    <div class="mb-2">
+      <label>Address</label>
+      <input type="text" class="form-control" name="address" value="{{ profile.address if profile else '' }}">
+    </div>
+    <div class="mb-2">
+      <label>Gender</label>
+      <select class="form-select" name="gender">
+        <option value="" {% if not profile or not profile.gender %}selected{% endif %}>Select Gender</option>
+        <option value="Male" {% if profile and profile.gender=='Male' %}selected{% endif %}>Male</option>
+        <option value="Female" {% if profile and profile.gender=='Female' %}selected{% endif %}>Female</option>
+        <option value="Other" {% if profile and profile.gender=='Other' %}selected{% endif %}>Other</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <label>City</label>
+      <input type="text" class="form-control" name="city" value="{{ profile.city if profile else '' }}">
+    </div>
+    <button class="btn btn-outline-primary" type="submit">Update Profile</button>
+  </form>
+
+  <!-- Update Display Name -->
+  <form class="mb-4" method="post" action="{{ url_for('update_display_name') }}">
+    <h6>Display Name</h6>
+    <div class="input-group mb-2">
+      <input type="text" class="form-control" name="display_name" value="{{ user.username }}" required>
+      <button class="btn btn-outline-primary" type="submit">Update</button>
+    </div>
+  </form>
+
+  <!-- Update Email -->
+  <form class="mb-4" method="post" action="{{ url_for('update_email') }}">
+    <h6>Email Address</h6>
+    <div class="input-group mb-2">
+      <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+      <button class="btn btn-outline-primary" type="submit">Update</button>
+    </div>
+  </form>
+
+  <!-- Change Password -->
+  <form class="mb-4" method="post" action="{{ url_for('change_password') }}">
+    <h6>Change Password</h6>
+    <div class="input-group mb-2">
+      <input type="password" class="form-control" name="new_password" placeholder="New Password" required>
+      <input type="password" class="form-control" name="confirm_password" placeholder="Confirm Password" required>
+      <button class="btn btn-outline-primary" type="submit">Change</button>
+    </div>
+  </form>
+
+  <!-- Notification Preferences -->
+  <form class="mb-4" method="post" action="{{ url_for('toggle_notifications') }}">
+    <h6>Notification Preferences</h6>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="notifSwitch" name="notifSwitch" onchange="this.form.submit()" {% if user.notification_enabled %}checked{% endif %}>
+      <label class="form-check-label" for="notifSwitch">Email me about event updates</label>
+    </div>
+  </form>
+
+  <!-- Theme Toggle -->
+  <form class="mb-4" method="post" action="{{ url_for('toggle_theme') }}">
+    <h6>Appearance</h6>
+    <button class="btn btn-outline-secondary btn-sm" type="submit">Toggle Light/Dark Mode (Current: {{ user.theme|capitalize }})</button>
+  </form>
+
+  <!-- Login Activity (Real Data) -->
+  <div class="mb-4">
+    <h6>Recent Login Activity</h6>
+    <ul class="list-group">
+      {% if activity and activity|length > 0 %}
+        {% for log in activity %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+          <span class="badge bg-secondary">{{ log.ip_address or 'N/A' }}</span>
+        </li>
+        {% endfor %}
+      {% else %}
+        <li class="list-group-item">No recent login activity found.</li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <!-- Account Deletion -->
+  <div class="mb-4">
+    <h6>Danger Zone</h6>
+    <form method="post" action="{{ url_for('delete_account') }}" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+      <button class="btn btn-danger btn-sm" type="submit">Delete My Account</button>
+    </form>
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="text-center mt-5 mb-2" style="font-size: 0.95rem; color: #888;">
+  &copy; 2025 Event Manager | v1.0
+</footer>
+{% endblock %}
