@@ -9,7 +9,7 @@ A modern event management platform with face recognition check-in, advanced dash
 - Face recognition check-in for attendees (MediaPipe + OpenCV)
 - Admin dashboard for user and event management
 - **Admin profile management:** Admins can update their profile info and upload a profile picture directly from their profile window (`/admin/profile`).
-- **"My Profile" button** on admin dashboard for quick access.
+- **"My Profile" button** on Admin dashboard for quick access.
 - Notification system for users
 - Responsive, modern UI with consistent branding
 - Copyright footer centered on every page
