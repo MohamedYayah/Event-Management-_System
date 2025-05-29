@@ -56,7 +56,7 @@ A modern event management platform with face recognition check-in, advanced dash
 
 ## Deployment
 - Designed for easy deployment to Heroku, Render, or similar PaaS.
-- For production, use a WSGI server (e.g., Gunicorn) and configure environment variables securely.
+- For production, use a WSGI server (Gunicorn) and configure environment variables securely.
 
 ## Credits
 - Built with Flask, Bootstrap, MediaPipe, and OpenCV.
@@ -72,3 +72,6 @@ This project is licensed under the GPL license. See the LICENSES file for more d
 - Face check-in is secure (real face required)
 - Calendar is restricted to authenticated users
 - Dashboard search is functional
+
+**Contribution:**
+Contributions are welcome if you find any issues or have suggestions for improvements, please feel free to open an issues or submit a pull request.
